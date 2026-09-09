@@ -27,6 +27,14 @@
             overflow: hidden;
         }
 
+        /* Hide number input arrows */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type="number"] { -moz-appearance: textfield; }
+
         .touch-target {
             min-height: 44px;
             min-width: 44px;
@@ -205,9 +213,21 @@
                         <span id="lblScene" class="text-[10px] font-bold font-mono text-white w-16 text-center">SCENE 1</span>
                         <button id="btnNextScene" class="touch-target w-7 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400">▶</button>
                         <button id="btnAddScene" class="touch-target px-2 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400 font-bold ml-1 uppercase">New</button>
+                        <button id="btnCopyScene" class="touch-target px-2 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400 font-bold ml-1 uppercase">Copy</button>
+                        <button id="btnPasteScene" class="touch-target px-2 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400 font-bold ml-1 uppercase">Paste</button>
                     </div>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="chkChainScenes" class="w-3 h-3 accent-blue-500">
+                        <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Chain</span>
+                    </label>
                 </div>
-                <button id="btnClearSeq" class="touch-target px-3 py-1 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold text-zinc-400 hover:text-white uppercase h-8">Clear Seq</button>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Swing</span>
+                        <input type="range" id="sliderSwing" min="0" max="0.75" step="0.01" value="0" class="w-16 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                    </div>
+                    <button id="btnClearSeq" class="touch-target px-3 py-1 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold text-zinc-400 hover:text-white uppercase h-8">Clear Seq</button>
+                </div>
             </div>
             
             <div class="scroller flex flex-col gap-2 flex-grow bg-zinc-900 p-1 rounded-xl overflow-x-auto overflow-y-auto relative">
@@ -243,6 +263,11 @@
                     <div class="flex gap-2 w-full h-10 shrink-0">
                         <button id="btnOneShot" class="touch-target flex-1 bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[11px] text-zinc-400 transition-colors uppercase tracking-wide">One-Shot</button>
                         <button id="btnGate" class="touch-target flex-1 bg-blue-900 border border-blue-500 rounded-lg font-bold text-[11px] text-white transition-colors uppercase tracking-wide">Gate</button>
+                        <div class="flex items-center gap-1 bg-zinc-800 rounded-lg px-2 border border-zinc-700">
+                            <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Pitch</span>
+                            <input type="range" id="sliderPitch" min="-24" max="24" step="1" value="0" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                            <span id="lblPitch" class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-6 text-right">0</span>
+                        </div>
                         <button id="btnSplit8" class="touch-target flex-1 bg-orange-900 border border-orange-700 rounded-lg font-bold text-[11px] text-white transition-colors uppercase tracking-wide flex items-center justify-center gap-2">
                             Split Sample
                         </button>
@@ -286,6 +311,7 @@
                 buffer: null,
                 offset: 0,
                 duration: 1,
+                pitch: 0,
                 oneShot: false, 
                 colorClass: 'text-zinc-600 bg-zinc-800 border-zinc-700',
                 colorHex: '#71717a',
@@ -296,6 +322,7 @@
             scenes: [
                 Array.from({ length: 8 }, (_, i) => ({
                     padIndex: i, 
+                    trackLength: 32,
                     steps: new Array(32).fill(false)
                 }))
             ],
@@ -307,6 +334,7 @@
             
             assigningTrackIndex: null, 
             selectedPadIndex: null,
+            copiedScene: null,
 
             isPlaying: false,
             bpm: 120,
@@ -635,11 +663,17 @@
             btnPrevScene: document.getElementById('btnPrevScene'),
             btnNextScene: document.getElementById('btnNextScene'),
             btnAddScene: document.getElementById('btnAddScene'),
+            btnCopyScene: document.getElementById('btnCopyScene'),
+            btnPasteScene: document.getElementById('btnPasteScene'),
             lblScene: document.getElementById('lblScene'),
+            chkChainScenes: document.getElementById('chkChainScenes'),
+            sliderSwing: document.getElementById('sliderSwing'),
             padSettingsPanel: document.getElementById('padSettingsPanel'),
             editPadLabel: document.getElementById('editPadLabel'),
             btnOneShot: document.getElementById('btnOneShot'),
             btnGate: document.getElementById('btnGate'),
+            sliderPitch: document.getElementById('sliderPitch'),
+            lblPitch: document.getElementById('lblPitch'),
             btnSplit8: document.getElementById('btnSplit8'),
             btnClearPad: document.getElementById('btnClearPad'),
             stepSizerInput: document.getElementById('stepSizerInput'),
@@ -887,7 +921,24 @@
                     state.assigningTrackIndex = (state.assigningTrackIndex === t) ? null : t;
                     renderSequencer();
                 });
+                
+                const lenInput = document.createElement('input');
+                lenInput.type = 'number';
+                lenInput.min = '1';
+                lenInput.max = '32';
+                lenInput.value = state.seqTracks[t].trackLength || 32;
+                lenInput.className = 'w-6 h-full bg-zinc-800 text-zinc-300 text-[9px] text-center font-mono rounded-md border border-zinc-700 outline-none shrink-0';
+                lenInput.addEventListener('change', (e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val) || val < 1) val = 1;
+                    if (val > 32) val = 32;
+                    state.seqTracks[t].trackLength = val;
+                    e.target.value = val;
+                    renderSequencer();
+                });
+
                 trackRow.appendChild(assignBtn);
+                trackRow.appendChild(lenInput);
 
                 for (let s = 0; s < 32; s++) {
                     const stepBtn = document.createElement('button');
@@ -945,6 +996,9 @@
                 els.btnGate.className = 'touch-target flex-1 bg-blue-600 border border-blue-400 rounded-lg font-bold text-[11px] text-white transition-colors uppercase';
             }
 
+            els.sliderPitch.value = pad.pitch || 0;
+            els.lblPitch.innerText = pad.pitch || 0;
+
             drawEditorWaveform();
         }
 
@@ -985,6 +1039,14 @@
             if (state.selectedPadIndex !== null) {
                 state.pads[state.selectedPadIndex].oneShot = false;
                 updateEditorUI();
+            }
+        });
+
+        els.sliderPitch.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                const pitch = parseInt(e.target.value);
+                state.pads[state.selectedPadIndex].pitch = pitch;
+                els.lblPitch.innerText = pitch;
             }
         });
 
@@ -1151,14 +1213,17 @@
 
                 for (let s = 0; s < 32; s++) {
                     const stepBtn = document.getElementById(`seq-step-${t}-${s}`);
-                    if (trackData.steps[s]) {
+                    const isActiveLength = s < (trackData.trackLength || 32);
+                    
+                    if (trackData.steps[s] && isActiveLength) {
                         stepBtn.classList.add('seq-step-active');
                         const textColorClass = padData.colorClass.split(' ').find(c => c.startsWith('text-'));
                         stepBtn.className = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-900 seq-step-active transition-colors ${textColorClass}`;
                     } else {
                         const isDownbeat = s % 4 === 0;
                         const isBar = s % 16 === 0;
-                        const bgBase = isBar ? 'bg-zinc-600' : (isDownbeat ? 'bg-zinc-700' : 'bg-zinc-800');
+                        let bgBase = isBar ? 'bg-zinc-600' : (isDownbeat ? 'bg-zinc-700' : 'bg-zinc-800');
+                        if (!isActiveLength) bgBase = 'bg-black opacity-20';
                         stepBtn.className = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-900 ${bgBase} transition-colors`;
                     }
                 }
@@ -1189,12 +1254,28 @@
             state.scenes.push(
                 Array.from({ length: 8 }, (_, i) => ({
                     padIndex: i, 
+                    trackLength: 32,
                     steps: new Array(32).fill(false)
                 }))
             );
             state.currentSceneIndex = state.scenes.length - 1;
             updateSceneLabel();
             renderSequencer();
+        });
+
+        els.btnCopyScene.addEventListener('click', () => {
+            state.copiedScene = JSON.parse(JSON.stringify(state.scenes[state.currentSceneIndex]));
+            els.btnCopyScene.classList.add('bg-blue-600', 'text-white');
+            setTimeout(() => els.btnCopyScene.classList.remove('bg-blue-600', 'text-white'), 200);
+        });
+
+        els.btnPasteScene.addEventListener('click', () => {
+            if (state.copiedScene) {
+                state.scenes[state.currentSceneIndex] = JSON.parse(JSON.stringify(state.copiedScene));
+                els.btnPasteScene.classList.add('bg-blue-600', 'text-white');
+                setTimeout(() => els.btnPasteScene.classList.remove('bg-blue-600', 'text-white'), 200);
+                renderSequencer();
+            }
         });
 
         els.btnClearSeq.addEventListener('click', () => {
@@ -1212,6 +1293,7 @@
 
             const source = state.audioCtx.createBufferSource();
             source.buffer = padData.buffer;
+            source.playbackRate.value = Math.pow(2, (padData.pitch || 0) / 12);
             const gain = state.audioCtx.createGain();
 
             gain.gain.setValueAtTime(0, time);
@@ -1275,6 +1357,7 @@
 
             const source = state.audioCtx.createBufferSource();
             source.buffer = padData.buffer;
+            source.playbackRate.value = Math.pow(2, (padData.pitch || 0) / 12);
 
             const gain = state.audioCtx.createGain();
             gain.gain.setValueAtTime(0, scheduledTime);
@@ -1305,8 +1388,9 @@
             setTimeout(() => {
                 document.querySelectorAll('.seq-step-playing').forEach(el => el.classList.remove('seq-step-playing'));
                 for (let t = 0; t < 8; t++) {
-                    const el = document.getElementById(`seq-step-${t}-${stepToHighlight}`);
-                    if (el && state.seqTracks[t].steps[stepToHighlight]) {
+                    const tStep = stepToHighlight % (state.seqTracks[t].trackLength || 32);
+                    const el = document.getElementById(`seq-step-${t}-${tStep}`);
+                    if (el && state.seqTracks[t].steps[tStep]) {
                         el.classList.add('seq-step-playing');
                     } else if (el) {
                         el.style.backgroundColor = '#3f3f46';
@@ -1317,17 +1401,34 @@
 
             const secondsPerBeat = 60.0 / state.bpm;
             const timePer16th = 0.25 * secondsPerBeat;
+            
+            const swingAmount = els.sliderSwing ? parseFloat(els.sliderSwing.value) : 0;
+            let stepTime = state.nextNoteTime;
+            
+            // Apply swing to even 16th notes (0-indexed: 1, 3, 5, etc)
+            if (state.currentStep % 2 !== 0) {
+                stepTime += (timePer16th * swingAmount);
+            }
 
             for (let t = 0; t < 8; t++) {
-                if (state.seqTracks[t].steps[state.currentStep]) {
+                const tStep = state.currentStep % (state.seqTracks[t].trackLength || 32);
+                if (state.seqTracks[t].steps[tStep]) {
                     const padData = state.pads[state.seqTracks[t].padIndex];
                     const basePlayDuration = padData.oneShot ? padData.duration : timePer16th;
-                    triggerSequencerSound(state.seqTracks[t].padIndex, state.nextNoteTime, basePlayDuration);
+                    triggerSequencerSound(state.seqTracks[t].padIndex, stepTime, basePlayDuration);
                 }
             }
 
             state.nextNoteTime += timePer16th;
             state.currentStep = (state.currentStep + 1) % 32;
+            
+            if (state.currentStep === 0 && els.chkChainScenes && els.chkChainScenes.checked) {
+                state.currentSceneIndex = (state.currentSceneIndex + 1) % state.scenes.length;
+                setTimeout(() => {
+                    updateSceneLabel();
+                    renderSequencer();
+                }, highlightDelay);
+            }
         }
 
         function schedulerLoop() {
