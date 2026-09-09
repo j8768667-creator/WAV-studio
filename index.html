@@ -1461,6 +1461,68 @@
             }
         });
 
+        let recScriptNode = null;
+        let leftBuffers = [];
+        let rightBuffers = [];
+
+        function exportWAV(leftBufs, rightBufs, sampleRate) {
+            let totalSamples = leftBufs.reduce((acc, b) => acc + b.length, 0);
+            if (totalSamples === 0) {
+                alert("Nothing was recorded.");
+                return;
+            }
+            
+            const buffer = new ArrayBuffer(44 + totalSamples * 4);
+            const view = new DataView(buffer);
+
+            const writeString = (view, offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + totalSamples * 4, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); 
+            view.setUint16(22, 2, true); 
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 4, true);
+            view.setUint16(32, 4, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, totalSamples * 4, true);
+
+            let offset = 44;
+            for (let i = 0; i < leftBufs.length; i++) {
+                const left = leftBufs[i];
+                const right = rightBufs[i];
+                for (let j = 0; j < left.length; j++) {
+                    let sampleL = Math.max(-1, Math.min(1, left[j]));
+                    let sampleR = Math.max(-1, Math.min(1, right[j]));
+                    view.setInt16(offset, sampleL < 0 ? sampleL * 0x8000 : sampleL * 0x7FFF, true);
+                    offset += 2;
+                    view.setInt16(offset, sampleR < 0 ? sampleR * 0x8000 : sampleR * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+            
+            const blob = new Blob([view], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `ChopGrid_Bounce.wav`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
         els.btnRecord.addEventListener('click', () => {
             initAudioEngine();
             if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
@@ -1469,63 +1531,33 @@
                 state.isRecording = false;
                 els.btnRecord.innerText = "REC / EXP";
                 els.btnRecord.classList.remove('animate-pulse', 'bg-red-500');
-                state.mediaRecorder.stop();
-            } else {
-                state.recordedChunks = [];
-
-                const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
-                            (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
-
-                let recorder;
-                try {
-                    recorder = new MediaRecorder(state.recordDest.stream, mime ? { mimeType: mime } : {});
-                } catch (e) {
-                    alert("Recording not supported in this browser version.");
-                    return;
+                
+                if (recScriptNode) {
+                    recScriptNode.disconnect();
+                    recScriptNode = null;
                 }
-                state.mediaRecorder = recorder;
-
-                recorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) state.recordedChunks.push(e.data);
+                
+                exportWAV(leftBuffers, rightBuffers, state.audioCtx.sampleRate);
+                leftBuffers = [];
+                rightBuffers = [];
+                
+            } else {
+                leftBuffers = [];
+                rightBuffers = [];
+                
+                recScriptNode = state.audioCtx.createScriptProcessor(4096, 2, 2);
+                recScriptNode.onaudioprocess = (e) => {
+                    if (!state.isRecording) return;
+                    leftBuffers.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+                    rightBuffers.push(new Float32Array(e.inputBuffer.getChannelData(1)));
                 };
-
-                recorder.onerror = (e) => {
-                    console.error('MediaRecorder error:', e.error || e);
-                    els.statusDisplay.innerText = 'REC ERROR';
-                    els.statusDisplay.className = 'text-[9px] font-mono text-red-500 mt-0.5 uppercase tracking-wider';
-                };
-
-                recorder.onstop = () => {
-                    if (state.recordedChunks.length === 0) {
-                        alert("Nothing was recorded — play a pad or the sequencer while REC is active, then stop.");
-                        return;
-                    }
-                    const blob = new Blob(state.recordedChunks, { type: recorder.mimeType || 'audio/webm' });
-                    if (blob.size === 0) {
-                        alert("Recording came out empty. Please try again.");
-                        return;
-                    }
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-
-                    const ext = (recorder.mimeType && recorder.mimeType.includes('mp4')) ? 'm4a' : 'webm';
-                    a.download = `ChopGrid_Bounce.${ext}`;
-                    
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
-                };
-
+                
+                state.outputNode.connect(recScriptNode);
+                recScriptNode.connect(state.audioCtx.destination);
+                
                 state.isRecording = true;
                 els.btnRecord.innerText = "STOP REC";
                 els.btnRecord.classList.add('animate-pulse', 'bg-red-500');
-                recorder.start(250);
             }
         });
 
