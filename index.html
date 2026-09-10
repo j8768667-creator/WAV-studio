@@ -6,6 +6,7 @@
     <title>ChopGrid: Advanced Sequencer & Sampler</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <style>
         :root {
@@ -194,9 +195,10 @@
                 <input type="range" id="sliderBpm" min="60" max="180" value="120" class="mini-slider">
             </div>
 
-            <button id="btnRecord" class="touch-target px-3 bg-red-900 border-2 border-red-700 text-red-100 rounded-lg font-black text-[10px] transition-colors uppercase h-11 flex flex-col items-center justify-center">
-                <span>REC / EXP</span>
-            </button>
+            <div class="flex flex-col gap-1 w-20 shrink-0">
+                <button id="btnRecord" class="touch-target flex-1 bg-red-900 border-2 border-red-700 text-red-100 rounded-lg font-black text-[9px] transition-colors uppercase">MIX</button>
+                <button id="btnRecordStems" class="touch-target flex-1 bg-red-900/50 border border-red-700/50 text-red-200 rounded-lg font-bold text-[8px] transition-colors uppercase">STEMS</button>
+            </div>
             <button id="btnPlay" class="touch-target px-6 bg-blue-600 border-2 border-blue-500 rounded-lg font-black text-sm w-24 text-center transition-colors h-11 uppercase">PLAY</button>
         </div>
     </header>
@@ -226,7 +228,8 @@
                         <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Swing</span>
                         <input type="range" id="sliderSwing" min="0" max="0.75" step="0.01" value="0" class="w-16 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
                     </div>
-                    <button id="btnClearSeq" class="touch-target px-3 py-1 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold text-zinc-400 hover:text-white uppercase h-8">Clear Seq</button>
+                    <button id="btnPLockMode" class="touch-target px-2 h-7 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded text-[9px] font-bold uppercase transition-colors shrink-0">P-LOCK</button>
+                    <button id="btnClearSeq" class="touch-target px-3 py-1 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold text-zinc-400 hover:text-white uppercase h-8 shrink-0">Clear Seq</button>
                 </div>
             </div>
             
@@ -285,6 +288,20 @@
 
     </main>
 
+    <!-- P-Lock Editor Modal -->
+    <div id="pLockEditor" class="hidden absolute z-50 bg-zinc-900 border border-orange-500/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] p-2 rounded-lg flex-col gap-3 min-w-[140px]">
+        <div class="text-[9px] font-mono text-orange-400 uppercase font-bold tracking-wider" id="pLockLabel">TRK 1 STEP 1</div>
+        <div class="flex items-center gap-2 bg-zinc-800 rounded px-2 py-1">
+            <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Pitch</span>
+            <input type="range" id="pLockPitch" min="-24" max="24" step="1" value="0" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+            <span id="pLockPitchVal" class="text-[9px] font-bold font-mono text-zinc-300 w-6 text-right">0</span>
+        </div>
+        <div class="flex justify-between gap-2 mt-1">
+            <button id="btnRemovePLock" class="text-[9px] font-bold bg-red-900/40 hover:bg-red-900/60 text-red-400 px-3 py-1.5 rounded flex-1 uppercase transition-colors">Clear</button>
+            <button id="btnClosePLock" class="text-[9px] font-bold bg-zinc-700 hover:bg-zinc-600 text-white px-3 py-1.5 rounded flex-1 uppercase transition-colors">Close</button>
+        </div>
+    </div>
+
     <script>
         /**
          * STATE MANAGEMENT
@@ -302,6 +319,7 @@
             mediaRecorder: null,
             recordedChunks: [],
             isRecording: false,
+            isRecordingStems: false,
 
             audioPool: [], 
             
@@ -323,7 +341,8 @@
                 Array.from({ length: 8 }, (_, i) => ({
                     padIndex: i, 
                     trackLength: 32,
-                    steps: new Array(32).fill(false)
+                    steps: new Array(32).fill(false),
+                    stepLocks: {}
                 }))
             ],
             currentSceneIndex: 0,
@@ -335,6 +354,8 @@
             assigningTrackIndex: null, 
             selectedPadIndex: null,
             copiedScene: null,
+            pLockMode: false,
+            editingPLock: null,
 
             isPlaying: false,
             bpm: 120,
@@ -645,7 +666,15 @@
             statusDisplay: document.getElementById('statusDisplay'),
             btnPlay: document.getElementById('btnPlay'),
             btnRecord: document.getElementById('btnRecord'),
+            btnRecordStems: document.getElementById('btnRecordStems'),
             btnClearSeq: document.getElementById('btnClearSeq'),
+            btnPLockMode: document.getElementById('btnPLockMode'),
+            pLockEditor: document.getElementById('pLockEditor'),
+            pLockLabel: document.getElementById('pLockLabel'),
+            pLockPitch: document.getElementById('pLockPitch'),
+            pLockPitchVal: document.getElementById('pLockPitchVal'),
+            btnRemovePLock: document.getElementById('btnRemovePLock'),
+            btnClosePLock: document.getElementById('btnClosePLock'),
             sliderBpm: document.getElementById('sliderBpm'),
             bpmVal: document.getElementById('bpmVal'),
             sliderHpf: document.getElementById('sliderHpf'),
@@ -760,6 +789,13 @@
             
             state.masterGain = state.audioCtx.createGain();
             state.outputNode = state.audioCtx.createGain();
+            
+            state.trackBusses = [];
+            for (let i=0; i<8; i++) {
+                let bus = state.audioCtx.createGain();
+                bus.connect(state.masterGain);
+                state.trackBusses.push(bus);
+            }
             
             // New FX Nodes
             state.driveNode = state.audioCtx.createWaveShaper();
@@ -949,9 +985,13 @@
                     stepBtn.className = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-900 ${bgBase}`;
                     stepBtn.id = `seq-step-${t}-${s}`;
                     
-                    stepBtn.addEventListener('click', () => {
-                        state.seqTracks[t].steps[s] = !state.seqTracks[t].steps[s];
-                        renderSequencer();
+                    stepBtn.addEventListener('click', (e) => {
+                        if (state.pLockMode) {
+                            openPLockEditor(t, s, stepBtn);
+                        } else {
+                            state.seqTracks[t].steps[s] = !state.seqTracks[t].steps[s];
+                            renderSequencer();
+                        }
                     });
 
                     trackRow.appendChild(stepBtn);
@@ -1218,7 +1258,14 @@
                     if (trackData.steps[s] && isActiveLength) {
                         stepBtn.classList.add('seq-step-active');
                         const textColorClass = padData.colorClass.split(' ').find(c => c.startsWith('text-'));
-                        stepBtn.className = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-900 seq-step-active transition-colors ${textColorClass}`;
+                        
+                        let baseClasses = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border seq-step-active transition-colors ${textColorClass}`;
+                        if (trackData.stepLocks && trackData.stepLocks[s]) {
+                            baseClasses += ' border-orange-500 shadow-[inset_0_0_8px_rgba(249,115,22,0.8)]';
+                        } else {
+                            baseClasses += ' border-zinc-900';
+                        }
+                        stepBtn.className = baseClasses;
                     } else {
                         const isDownbeat = s % 4 === 0;
                         const isBar = s % 16 === 0;
@@ -1255,7 +1302,8 @@
                 Array.from({ length: 8 }, (_, i) => ({
                     padIndex: i, 
                     trackLength: 32,
-                    steps: new Array(32).fill(false)
+                    steps: new Array(32).fill(false),
+                    stepLocks: {}
                 }))
             );
             state.currentSceneIndex = state.scenes.length - 1;
@@ -1276,6 +1324,64 @@
                 setTimeout(() => els.btnPasteScene.classList.remove('bg-blue-600', 'text-white'), 200);
                 renderSequencer();
             }
+        });
+
+        els.btnPLockMode.addEventListener('click', () => {
+            state.pLockMode = !state.pLockMode;
+            if (state.pLockMode) {
+                els.btnPLockMode.classList.add('bg-orange-600', 'text-white', 'border-orange-400');
+                els.btnPLockMode.classList.remove('bg-zinc-800', 'text-zinc-400', 'border-zinc-700');
+            } else {
+                els.btnPLockMode.classList.remove('bg-orange-600', 'text-white', 'border-orange-400');
+                els.btnPLockMode.classList.add('bg-zinc-800', 'text-zinc-400', 'border-zinc-700');
+                els.pLockEditor.classList.add('hidden');
+                state.editingPLock = null;
+            }
+        });
+
+        function openPLockEditor(t, s, btnEl) {
+            if (!state.seqTracks[t].stepLocks) state.seqTracks[t].stepLocks = {};
+            state.editingPLock = { t, s };
+            
+            els.pLockLabel.innerText = `TRK ${t+1} STEP ${s+1}`;
+            
+            const lock = state.seqTracks[t].stepLocks[s] || {};
+            const val = lock.pitch !== undefined ? lock.pitch : (state.pads[state.seqTracks[t].padIndex].pitch || 0);
+            
+            els.pLockPitch.value = val;
+            els.pLockPitchVal.innerText = val;
+            
+            els.pLockEditor.classList.remove('hidden');
+            const rect = btnEl.getBoundingClientRect();
+            els.pLockEditor.style.left = `${Math.min(rect.left, window.innerWidth - 150)}px`;
+            els.pLockEditor.style.top = `${rect.bottom + 5}px`;
+        }
+        
+        els.pLockPitch.addEventListener('input', (e) => {
+            if (state.editingPLock) {
+                const {t, s} = state.editingPLock;
+                els.pLockPitchVal.innerText = e.target.value;
+                if (!state.seqTracks[t].stepLocks[s]) state.seqTracks[t].stepLocks[s] = {};
+                state.seqTracks[t].stepLocks[s].pitch = parseInt(e.target.value);
+                renderSequencer();
+            }
+        });
+        
+        els.btnRemovePLock.addEventListener('click', () => {
+            if (state.editingPLock) {
+                const {t, s} = state.editingPLock;
+                if (state.seqTracks[t].stepLocks[s]) {
+                    delete state.seqTracks[t].stepLocks[s];
+                }
+                els.pLockEditor.classList.add('hidden');
+                state.editingPLock = null;
+                renderSequencer();
+            }
+        });
+        
+        els.btnClosePLock.addEventListener('click', () => {
+            els.pLockEditor.classList.add('hidden');
+            state.editingPLock = null;
         });
 
         els.btnClearSeq.addEventListener('click', () => {
@@ -1300,7 +1406,7 @@
             gain.gain.linearRampToValueAtTime(1, time + 0.005);
 
             source.connect(gain);
-            gain.connect(state.masterGain);
+            gain.connect(state.trackBusses[padIndex]);
 
             const safeDuration = Math.max(0.01, Math.min(padData.duration, padData.buffer.duration - padData.offset));
 
@@ -1349,7 +1455,7 @@
             padData.manualNodes = null;
         }
 
-        function triggerSequencerSound(padIndex, scheduledTime, basePlayDuration) {
+        function triggerSequencerSound(padIndex, scheduledTime, basePlayDuration, pLocks = null) {
             const padData = state.pads[padIndex];
             if (!padData.buffer || !state.audioCtx) return;
 
@@ -1357,7 +1463,9 @@
 
             const source = state.audioCtx.createBufferSource();
             source.buffer = padData.buffer;
-            source.playbackRate.value = Math.pow(2, (padData.pitch || 0) / 12);
+            
+            const effectivePitch = pLocks && pLocks.pitch !== undefined ? pLocks.pitch : (padData.pitch || 0);
+            source.playbackRate.value = Math.pow(2, effectivePitch / 12);
 
             const gain = state.audioCtx.createGain();
             gain.gain.setValueAtTime(0, scheduledTime);
@@ -1368,7 +1476,7 @@
             
             gain.gain.setTargetAtTime(0, scheduledTime + Math.max(0, safeDuration - 0.015), 0.015);
             source.connect(gain);
-            gain.connect(state.masterGain);
+            gain.connect(state.trackBusses[padIndex]);
             
             source.start(scheduledTime, padData.offset, safeDuration);
             source.stop(scheduledTime + safeDuration);
@@ -1415,7 +1523,8 @@
                 if (state.seqTracks[t].steps[tStep]) {
                     const padData = state.pads[state.seqTracks[t].padIndex];
                     const basePlayDuration = padData.oneShot ? padData.duration : timePer16th;
-                    triggerSequencerSound(state.seqTracks[t].padIndex, stepTime, basePlayDuration);
+                    const pLocks = state.seqTracks[t].stepLocks ? state.seqTracks[t].stepLocks[tStep] : null;
+                    triggerSequencerSound(state.seqTracks[t].padIndex, stepTime, basePlayDuration, pLocks);
                 }
             }
 
@@ -1465,12 +1574,9 @@
         let leftBuffers = [];
         let rightBuffers = [];
 
-        function exportWAV(leftBufs, rightBufs, sampleRate) {
+        function getWAVBlob(leftBufs, rightBufs, sampleRate) {
             let totalSamples = leftBufs.reduce((acc, b) => acc + b.length, 0);
-            if (totalSamples === 0) {
-                alert("Nothing was recorded.");
-                return;
-            }
+            if (totalSamples === 0) return null;
             
             const buffer = new ArrayBuffer(44 + totalSamples * 4);
             const view = new DataView(buffer);
@@ -1509,12 +1615,16 @@
                 }
             }
             
-            const blob = new Blob([view], { type: 'audio/wav' });
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function downloadBlob(blob, filename) {
+            if (!blob) return;
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = `ChopGrid_Bounce.wav`;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
@@ -1523,13 +1633,17 @@
             }, 100);
         }
 
+        let stemRecNodes = [];
+        let stemLeftBuffers = [];
+        let stemRightBuffers = [];
+
         els.btnRecord.addEventListener('click', () => {
             initAudioEngine();
             if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
 
             if (state.isRecording) {
                 state.isRecording = false;
-                els.btnRecord.innerText = "REC / EXP";
+                els.btnRecord.innerText = "MIX";
                 els.btnRecord.classList.remove('animate-pulse', 'bg-red-500');
                 
                 if (recScriptNode) {
@@ -1537,10 +1651,15 @@
                     recScriptNode = null;
                 }
                 
-                exportWAV(leftBuffers, rightBuffers, state.audioCtx.sampleRate);
+                const blob = getWAVBlob(leftBuffers, rightBuffers, state.audioCtx.sampleRate);
+                if (blob) {
+                    downloadBlob(blob, `ChopGrid_Master.wav`);
+                } else {
+                    alert("Nothing was recorded.");
+                }
+                
                 leftBuffers = [];
                 rightBuffers = [];
-                
             } else {
                 leftBuffers = [];
                 rightBuffers = [];
@@ -1556,8 +1675,64 @@
                 recScriptNode.connect(state.audioCtx.destination);
                 
                 state.isRecording = true;
-                els.btnRecord.innerText = "STOP REC";
+                els.btnRecord.innerText = "STOP";
                 els.btnRecord.classList.add('animate-pulse', 'bg-red-500');
+            }
+        });
+
+        els.btnRecordStems.addEventListener('click', () => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+
+            if (state.isRecordingStems) {
+                state.isRecordingStems = false;
+                els.btnRecordStems.innerText = "STEMS";
+                els.btnRecordStems.classList.remove('animate-pulse', 'bg-red-500');
+                
+                stemRecNodes.forEach(node => node.disconnect());
+                stemRecNodes = [];
+                
+                const zip = new JSZip();
+                let hasData = false;
+                for (let i = 0; i < 8; i++) {
+                    const blob = getWAVBlob(stemLeftBuffers[i], stemRightBuffers[i], state.audioCtx.sampleRate);
+                    if (blob) {
+                        zip.file(`Track_${i+1}.wav`, blob);
+                        hasData = true;
+                    }
+                }
+                
+                if (hasData) {
+                    zip.generateAsync({type:"blob"}).then(function(content) {
+                        downloadBlob(content, "ChopGrid_Stems.zip");
+                    });
+                } else {
+                    alert("Nothing was recorded.");
+                }
+                
+                stemLeftBuffers = [];
+                stemRightBuffers = [];
+                
+            } else {
+                stemLeftBuffers = Array(8).fill(null).map(() => []);
+                stemRightBuffers = Array(8).fill(null).map(() => []);
+                stemRecNodes = [];
+                
+                for (let i = 0; i < 8; i++) {
+                    let rec = state.audioCtx.createScriptProcessor(4096, 2, 2);
+                    rec.onaudioprocess = (e) => {
+                        if (!state.isRecordingStems) return;
+                        stemLeftBuffers[i].push(new Float32Array(e.inputBuffer.getChannelData(0)));
+                        stemRightBuffers[i].push(new Float32Array(e.inputBuffer.getChannelData(1)));
+                    };
+                    state.trackBusses[i].connect(rec);
+                    rec.connect(state.audioCtx.destination);
+                    stemRecNodes.push(rec);
+                }
+                
+                state.isRecordingStems = true;
+                els.btnRecordStems.innerText = "STOP";
+                els.btnRecordStems.classList.add('animate-pulse', 'bg-red-500');
             }
         });
 
