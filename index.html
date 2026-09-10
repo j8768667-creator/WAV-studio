@@ -114,7 +114,96 @@
         #padGrid span {
             white-space: pre-line;
         }
-    </style>
+    
+        .slider-fader {
+            -webkit-appearance: none;
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* WebKit */
+        }
+        .slider-fader::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 12px;
+            background: #e4e4e7;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #3f3f46;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        /* Custom Mixer Channels */
+        .mixer-channel {
+            background: linear-gradient(180deg, #1f2225 0%, #111215 100%);
+            border: 1px solid #00ff44;
+            box-shadow: inset 0 0 8px rgba(0,255,68,0.1), 0 4px 10px rgba(0,0,0,0.5);
+            border-radius: 12px;
+        }
+
+        .pan-styled::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 18px;
+            background: #111;
+            border: 2px solid #00ff44;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,255,68,0.8);
+            cursor: pointer;
+        }
+
+        .vol-styled::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 36px;
+            background: linear-gradient(180deg, #ff6a00, #ff2a00);
+            border-radius: 6px;
+            border: 1px solid #ff8844;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 12px rgba(255,80,0,0.8);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .vol-track-glow {
+            background: linear-gradient(to top, #00ff44 0%, #00ff44 var(--val, 50%), #18181b var(--val, 50%), #18181b 100%);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+        }
+
+        .mixer-btn {
+            background: #27272a;
+            color: #71717a;
+            border: 1px solid #18181b;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+        .mixer-btn:active {
+            transform: translateY(1px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+        }
+        .mixer-btn.m-active {
+            color: #ff5e00;
+            border-color: #ff5e00;
+            background: #1f120e;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(255,94,0,0.4);
+            text-shadow: 0 0 5px rgba(255,94,0,0.8);
+        }
+        .mixer-btn.s-active {
+            color: #00ff44;
+            border-color: #00ff44;
+            background: #0d1a12;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,255,68,0.4);
+            text-shadow: 0 0 5px rgba(0,255,68,0.8);
+        }
+
+        .mixer-label-title {
+            font-size: 8px;
+            font-weight: 800;
+            color: #d4d4d8;
+            letter-spacing: 1px;
+        }
+        </style>
 </head>
 <body class="p-3 gap-3 flex flex-col antialiased text-zinc-100 bg-black">
 
@@ -241,6 +330,16 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Res</span>
+                        <select id="selSeqResolution" class="bg-zinc-800 text-amber-500 font-mono text-xs px-1 py-0.5 rounded border border-zinc-700 outline-none h-7">
+                            <option value="16" selected>1/16</option>
+                            <option value="8">1/8</option>
+                            <option value="4">1/4</option>
+                            <option value="2">1/2</option>
+                            <option value="1">1 Bar</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-1">
                         <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Swing</span>
                         <input type="range" id="sliderSwing" min="0" max="0.75" step="0.01" value="0" class="w-16 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
                     </div>
@@ -262,12 +361,16 @@
             <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex-grow flex flex-col min-w-0">
                 <div class="flex justify-between items-center shrink-0 h-8 mb-2">
                     <div class="flex gap-2 items-center h-full">
-                        <h3 class="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider mr-2 hidden sm:block">Pad Editor</h3>
+                        <div class="flex bg-zinc-800 rounded-lg p-0.5 mr-2">
+                            <button id="tabPadEditor" class="px-2 py-1 bg-zinc-700 text-zinc-100 rounded text-[9px] font-bold uppercase transition-colors">Pad Editor</button>
+                            <button id="tabMixer" class="px-2 py-1 text-zinc-400 hover:text-zinc-200 rounded text-[9px] font-bold uppercase transition-colors">Mixer</button>
+                        </div>
                         <button id="btnOneShot" class="px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[9px] text-zinc-400 transition-colors uppercase">One-Shot</button>
                         <button id="btnGate" class="px-2 h-full bg-blue-600 text-white border border-blue-500 rounded-lg font-bold text-[9px] text-white transition-colors uppercase">Gate</button>
                         <button id="btnReverse" class="px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[9px] text-zinc-400 transition-colors uppercase">Rev</button>
                         <button id="btnSplit8" class="px-2 h-full bg-orange-600 text-white border border-orange-500 rounded-lg font-bold text-[9px] text-white transition-colors uppercase sm:ml-2">Split</button>
                         <button id="btnClearPad" class="px-2 h-full bg-red-100 border border-red-300 hover:bg-red-200 rounded-lg font-bold text-[9px] text-red-600 transition-colors uppercase">Clear</button>
+                        <button id="btnClearAll" class="px-2 h-full bg-red-900 border border-red-700 hover:bg-red-800 rounded-lg font-bold text-[9px] text-red-200 transition-colors uppercase">Clear All</button>
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-[9px] font-mono text-zinc-400 hidden sm:block">LEN:</label>
@@ -280,13 +383,14 @@
                     </div>
                 </div>
                 
-                <div class="flex gap-2 opacity-30 pointer-events-none transition-opacity flex-grow h-full" id="padSettingsPanel">
+                <div id="padEditorContainer" class="flex-grow flex h-full min-h-0">
+<div class="flex gap-2 opacity-30 pointer-events-none transition-opacity flex-grow h-full" id="padSettingsPanel">
                     <div class="flex flex-col flex-grow relative overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800">
                         <canvas id="padWaveCanvas" class="absolute inset-0 w-full h-full touch-none"></canvas>
                         <div id="padWaveInfo" class="absolute bottom-1 left-0 right-0 text-[9px] font-mono text-zinc-400 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)] text-center uppercase tracking-wide pointer-events-none">SELECT A PAD</div>
                     </div>
                     
-                    <div class="flex flex-col justify-evenly bg-zinc-900 rounded-lg p-2 md:p-3 border border-zinc-800 w-32 md:w-48 shrink-0">
+                    <div class="grid grid-cols-2 gap-2 md:gap-3 bg-zinc-900 rounded-lg p-2 md:p-3 border border-zinc-800 w-48 md:w-64 shrink-0 items-center">
                         <div class="flex flex-col gap-1">
                             <div class="flex justify-between items-end">
                                 <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Pitch</span>
@@ -308,12 +412,70 @@
                             </div>
                             <input type="range" id="sliderPan" min="-1" max="1" step="0.05" value="0" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
                         </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Atk</span>
+                                <span id="lblAttack" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">0s</span>
+                            </div>
+                            <input type="range" id="sliderAttack" min="0" max="2" step="0.01" value="0" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Dec</span>
+                                <span id="lblDecay" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">10s</span>
+                            </div>
+                            <input type="range" id="sliderDecay" min="0" max="10" step="0.1" value="10" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Dly</span>
+                                <span id="lblPadDelay" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">0%</span>
+                            </div>
+                            <input type="range" id="sliderPadDelay" min="0" max="1" step="0.01" value="0" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Rev</span>
+                                <span id="lblPadReverb" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">0%</span>
+                            </div>
+                            <input type="range" id="sliderPadReverb" min="0" max="1" step="0.01" value="0" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
                     </div>
                 </div>
             </div>
-        </section>
+            
+            <div class="hidden flex-row gap-2 h-full w-full overflow-x-auto pb-2" id="mixerPanel">
+                <!-- 12 mixer channels injected here -->
+            </div>
+            
+        </div>
+    </section>
 
     </main>
+
+    <!-- Split Options Modal -->
+    <div id="splitModal" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-zinc-900 border border-orange-500/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] p-4 rounded-lg flex-col gap-4 min-w-[250px]">
+        <div class="text-xs font-mono text-orange-400 uppercase font-bold tracking-wider">Split Audio</div>
+        <div class="flex flex-col gap-3 bg-zinc-800 rounded p-3">
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold font-mono text-zinc-400 uppercase w-16">Split By</span>
+                <select id="splitMode" class="bg-zinc-700 text-zinc-200 text-[10px] font-mono rounded px-2 py-1 flex-grow outline-none border border-zinc-600">
+                    <option value="number">Number of Slices</option>
+                    <option value="bars">Bars / Beats</option>
+                    <option value="seconds">Seconds</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold font-mono text-zinc-400 uppercase w-16" id="splitValueLabel">Slices</span>
+                <input type="number" id="splitValue" min="1" max="12" step="1" value="4" class="w-full h-6 bg-zinc-700 border border-zinc-600 text-zinc-100 text-[10px] font-mono px-2 rounded focus:outline-none focus:border-zinc-500">
+            </div>
+        </div>
+        <div class="text-[9px] font-mono text-zinc-500 uppercase text-center" id="splitInfo">Will write to available empty pads.</div>
+        <div class="flex justify-between gap-2 mt-1">
+            <button id="btnCancelSplit" class="text-[10px] font-bold bg-zinc-700 hover:bg-zinc-600 text-zinc-100 px-4 py-2 rounded flex-1 uppercase transition-colors">Cancel</button>
+            <button id="btnConfirmSplit" class="text-[10px] font-bold bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded flex-1 uppercase transition-colors">Write Splits</button>
+        </div>
+    </div>
 
     <!-- P-Lock Editor Modal -->
     <div id="pLockEditor" class="hidden absolute z-50 bg-zinc-900 border border-orange-500/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] p-2 rounded-lg flex-col gap-3 min-w-[140px]">
@@ -329,6 +491,11 @@
                 <input type="range" id="pLockVolume" min="0" max="2" step="0.05" value="1" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
                 <span id="pLockVolumeVal" class="text-[9px] font-bold font-mono text-zinc-300 w-6 text-right">1.0</span>
             </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Prob</span>
+                <input type="range" id="pLockProb" min="0" max="100" step="5" value="100" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                <span id="pLockProbVal" class="text-[9px] font-bold font-mono text-zinc-300 w-6 text-right">100%</span>
+            </div>
         </div>
         <div class="flex justify-between gap-2 mt-1">
             <button id="btnRemovePLock" class="text-[9px] font-bold bg-red-900/40 hover:bg-red-900/60 text-red-400 px-3 py-1.5 rounded flex-1 uppercase transition-colors">Clear</button>
@@ -340,6 +507,13 @@
         /**
          * STATE MANAGEMENT
          */
+        function formatPan(val) {
+            val = parseFloat(val);
+            if (val === 0) return 'C';
+            if (val < 0) return 'L' + Math.round(Math.abs(val) * 100);
+            return 'R' + Math.round(val * 100);
+        }
+
         const state = {
             audioCtx: null,
             masterGain: null,
@@ -364,6 +538,10 @@
                 offset: 0,
                 duration: 1,
                 pitch: 0,
+                attack: 0,
+                decay: 10,
+                delaySend: 0,
+                reverbSend: 0,
                 oneShot: false, 
                 colorClass: 'text-zinc-400 bg-zinc-800 border-zinc-700',
                 colorHex: '#71717a',
@@ -392,6 +570,7 @@
 
             isPlaying: false,
             bpm: 120,
+            stepResolution: 16,
             currentStep: 0,
             nextNoteTime: 0.0,
             lookahead: 25.0, 
@@ -478,11 +657,25 @@
             const W = canvas.width, H = canvas.height;
             ctx.clearRect(0, 0, W, H);
             if (!buffer) return;
+            
+            let startTime = 0;
+            let endTime = buffer.duration;
+            
+            // Apply zoom ONLY if this is the large editor canvas (showHandles = true)
+            if (showHandles) {
+                const zFactor = state.zoomFactor || 1;
+                const zOffset = state.zoomOffset || 0;
+                startTime = zOffset * buffer.duration;
+                endTime = startTime + (buffer.duration / zFactor);
+            }
 
             // 1. Draw base 1x waveform
-            drawDynamicWaveform(ctx, buffer, 0, 0, W, H, 0, buffer.duration, color);
+            drawDynamicWaveform(ctx, buffer, 0, 0, W, H, startTime, endTime, color);
 
-            const timeToX = (t) => (t / buffer.duration) * W;
+            const timeToX = (t) => {
+                const normalized = (t - startTime) / (endTime - startTime);
+                return normalized * W;
+            };
             const selStartX = timeToX(offset);
             const selEndX = timeToX(offset + duration);
 
@@ -606,7 +799,7 @@
             if (waveDrag && waveDrag.active) {
                 // If it was a quick click without dragging, play the pad preview
                 if (Math.abs(waveDrag.mouseX - waveDrag.startX) < 3 && state.selectedPadIndex !== null) {
-                    playPad(state.selectedPadIndex, true);
+                    playManualPad(state.selectedPadIndex);
                 }
                 waveDrag.active = false;
             }
@@ -645,6 +838,7 @@
             sliderDelay: document.getElementById('sliderDelay'),
             sliderDrive: document.getElementById('sliderDrive'),
             sliderComp: document.getElementById('sliderComp'),
+            selSeqResolution: document.getElementById('selSeqResolution'),
             seqGrid: document.getElementById('seqGrid'),
             btnPrevScene: document.getElementById('btnPrevScene'),
             btnNextScene: document.getElementById('btnNextScene'),
@@ -665,18 +859,110 @@
             lblVolume: document.getElementById('lblVolume'),
             sliderPan: document.getElementById('sliderPan'),
             lblPan: document.getElementById('lblPan'),
+            sliderAttack: document.getElementById('sliderAttack'),
+            lblAttack: document.getElementById('lblAttack'),
+            sliderDecay: document.getElementById('sliderDecay'),
+            lblDecay: document.getElementById('lblDecay'),
+            sliderPadDelay: document.getElementById('sliderPadDelay'),
+            lblPadDelay: document.getElementById('lblPadDelay'),
+            sliderPadReverb: document.getElementById('sliderPadReverb'),
+            lblPadReverb: document.getElementById('lblPadReverb'),
+            tabPadEditor: document.getElementById('tabPadEditor'),
+            tabMixer: document.getElementById('tabMixer'),
+            padEditorContainer: document.getElementById('padEditorContainer'),
+            mixerPanel: document.getElementById('mixerPanel'),
+            pLockProb: document.getElementById('pLockProb'),
+            pLockProbVal: document.getElementById('pLockProbVal'),
             btnSplit8: document.getElementById('btnSplit8'),
             btnClearPad: document.getElementById('btnClearPad'),
+            btnClearAll: document.getElementById('btnClearAll'),
+            splitModal: document.getElementById('splitModal'),
+            splitMode: document.getElementById('splitMode'),
+            splitValueLabel: document.getElementById('splitValueLabel'),
+            splitValue: document.getElementById('splitValue'),
+            splitInfo: document.getElementById('splitInfo'),
+            btnCancelSplit: document.getElementById('btnCancelSplit'),
+            btnConfirmSplit: document.getElementById('btnConfirmSplit'),
             stepSizerInput: document.getElementById('stepSizerInput'),
             chkLockSize: document.getElementById('chkLockSize'),
             padWaveCanvas: document.getElementById('padWaveCanvas'),
             padWaveInfo: document.getElementById('padWaveInfo')
         };
 
+        
+        els.tabPadEditor.addEventListener('click', () => {
+            els.tabPadEditor.className = 'px-2 py-1 bg-zinc-700 text-zinc-100 rounded text-[9px] font-bold uppercase transition-colors';
+            els.tabMixer.className = 'px-2 py-1 text-zinc-400 hover:text-zinc-200 rounded text-[9px] font-bold uppercase transition-colors';
+            els.padEditorContainer.classList.remove('hidden');
+            els.padEditorContainer.classList.add('flex');
+            els.mixerPanel.classList.add('hidden');
+            els.mixerPanel.classList.remove('flex');
+            window.dispatchEvent(new Event('resize'));
+        });
+        
+        els.tabMixer.addEventListener('click', () => {
+            els.tabMixer.className = 'px-2 py-1 bg-zinc-700 text-zinc-100 rounded text-[9px] font-bold uppercase transition-colors';
+            els.tabPadEditor.className = 'px-2 py-1 text-zinc-400 hover:text-zinc-200 rounded text-[9px] font-bold uppercase transition-colors';
+            els.mixerPanel.classList.remove('hidden');
+            els.mixerPanel.classList.add('flex');
+            els.padEditorContainer.classList.add('hidden');
+            els.padEditorContainer.classList.remove('flex');
+            renderMixer();
+        });
+
         els.padWaveCanvas.addEventListener('pointerdown', waveCanvasPointerDown);
         els.padWaveCanvas.addEventListener('pointermove', waveCanvasPointerMove);
         els.padWaveCanvas.addEventListener('pointerup', waveCanvasPointerUp);
         els.padWaveCanvas.addEventListener('pointercancel', waveCanvasPointerUp);
+        
+        let initialPinchDistance = null;
+        let initialZoomFactor = 1;
+        let initialZoomOffset = 0;
+        let pinchCenter = 0;
+        
+        els.padWaveCanvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                initialPinchDistance = Math.sqrt(dx*dx + dy*dy);
+                initialZoomFactor = state.zoomFactor || 1;
+                initialZoomOffset = state.zoomOffset || 0;
+                
+                const rect = els.padWaveCanvas.getBoundingClientRect();
+                pinchCenter = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) / rect.width;
+            }
+        }, {passive: false});
+        
+        els.padWaveCanvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && initialPinchDistance) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                const scale = dist / initialPinchDistance;
+                let newZoom = initialZoomFactor * scale;
+                newZoom = Math.max(1, Math.min(newZoom, 50)); // Max 50x zoom
+                
+                // Adjust offset to zoom into the pinch center
+                const zoomRatio = initialZoomFactor / newZoom;
+                let newOffset = pinchCenter - (pinchCenter - initialZoomOffset) * zoomRatio;
+                
+                // Clamp offset
+                newOffset = Math.max(0, Math.min(newOffset, 1 - 1/newZoom));
+                
+                state.zoomFactor = newZoom;
+                state.zoomOffset = newOffset;
+                drawEditorWaveform();
+            }
+        }, {passive: false});
+        
+        els.padWaveCanvas.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                initialPinchDistance = null;
+            }
+        });
 
         // Audio node cleanup helper for halting "ghost" audio safely
         function killPadAudio(pad) {
@@ -1026,10 +1312,23 @@
             state.outputNode = state.audioCtx.createGain();
             
             state.trackBusses = [];
-            for (let i=0; i<8; i++) {
+            state.trackDelaySends = [];
+            state.trackReverbSends = [];
+            for (let i=0; i<12; i++) {
                 let bus = state.audioCtx.createGain();
+                bus.gain.value = state.pads[i].volume !== undefined ? state.pads[i].volume : 1.0;
                 bus.connect(state.masterGain);
                 state.trackBusses.push(bus);
+                
+                let dSend = state.audioCtx.createGain();
+                dSend.gain.value = 0;
+                bus.connect(dSend);
+                state.trackDelaySends.push(dSend);
+                
+                let rSend = state.audioCtx.createGain();
+                rSend.gain.value = 0;
+                bus.connect(rSend);
+                state.trackReverbSends.push(rSend);
             }
             
             // New FX Nodes
@@ -1076,13 +1375,17 @@
             
             state.compMakeupNode.connect(state.outputNode);
 
-            state.compMakeupNode.connect(state.delayNode);
+            
             state.delayNode.connect(state.delayFeedback);
             state.delayFeedback.connect(state.delayNode);
             state.delayNode.connect(delayMix);
-
-            state.compMakeupNode.connect(state.reverbNode);
+            
             state.reverbNode.connect(reverbMix);
+            
+            for (let i=0; i<12; i++) {
+                state.trackDelaySends[i].connect(state.delayNode);
+                state.trackReverbSends[i].connect(state.reverbNode);
+            }
 
             delayMix.connect(state.outputNode);
             reverbMix.connect(state.outputNode);
@@ -1144,7 +1447,7 @@
                 
                 const assignBtn = document.createElement('button');
                 assignBtn.id = `pad-${t}`;
-                assignBtn.className = `pad relative overflow-hidden w-[54px] sm:w-[64px] shrink-0 h-full rounded-md border-b-2 bg-zinc-800 flex flex-col items-center justify-center font-mono font-bold transition-colors focus:outline-none`;
+                assignBtn.className = `pad relative overflow-hidden w-[72px] sm:w-[88px] shrink-0 h-full rounded-md border-b-2 bg-zinc-800 flex flex-col items-center justify-center font-mono font-bold transition-colors focus:outline-none`;
                 
                 const canvas = document.createElement('canvas');
                 canvas.id = `pad-wave-${t}`;
@@ -1187,23 +1490,7 @@
                 assignBtn.addEventListener('pointercancel', releaseHandler);
                 assignBtn.addEventListener('pointerleave', releaseHandler);
                 
-                const muteBtn = document.createElement('button');
-                muteBtn.id = `mute-btn-${t}`;
-                muteBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors bg-zinc-800 text-zinc-500 shrink-0`;
-                muteBtn.innerText = 'M';
-                muteBtn.addEventListener('click', () => {
-                    state.seqTracks[t].muted = !state.seqTracks[t].muted;
-                    renderSequencer();
-                });
 
-                const soloBtn = document.createElement('button');
-                soloBtn.id = `solo-btn-${t}`;
-                soloBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors bg-zinc-800 text-zinc-500 shrink-0`;
-                soloBtn.innerText = 'S';
-                soloBtn.addEventListener('click', () => {
-                    state.seqTracks[t].soloed = !state.seqTracks[t].soloed;
-                    renderSequencer();
-                });
 
                 const lenInput = document.createElement('input');
                 lenInput.type = 'number';
@@ -1221,8 +1508,8 @@
                 });
 
                 trackRow.appendChild(assignBtn);
-                trackRow.appendChild(muteBtn);
-                trackRow.appendChild(soloBtn);
+                
+                
                 trackRow.appendChild(lenInput);
 
                 for (let s = 0; s < 32; s++) {
@@ -1273,6 +1560,126 @@
             updateEditorUI();
         }
 
+        
+        function renderMixer() {
+            els.mixerPanel.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const padData = state.pads[i];
+                
+                const ch = document.createElement('div');
+                ch.className = 'flex flex-col mixer-channel p-2 min-w-[70px] max-w-[90px] flex-1 shrink-0 justify-between items-center h-full relative overflow-hidden';
+                
+                // Pan Section
+                const panTitle = document.createElement('div');
+                panTitle.className = 'mixer-label-title mt-1 mb-1';
+                panTitle.innerText = 'PAN';
+                ch.appendChild(panTitle);
+
+                const panWrap = document.createElement('div');
+                panWrap.className = 'w-full flex justify-center mb-1 relative';
+                const panSlider = document.createElement('input');
+                panSlider.type = 'range';
+                panSlider.min = -1; panSlider.max = 1; panSlider.step = 0.05;
+                panSlider.value = padData.pan || 0;
+                panSlider.className = 'w-10 h-[6px] bg-black border border-[#111] rounded-full appearance-none cursor-pointer pan-styled shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] outline-none relative z-10';
+                
+                const panBase = document.createElement('div');
+                panBase.className = 'absolute top-[6px] left-1/2 -translate-x-1/2 w-10 h-[2px] bg-zinc-900 pointer-events-none rounded';
+
+                panSlider.addEventListener('input', (e) => {
+                    padData.pan = parseFloat(e.target.value);
+                    if (state.selectedPadIndex === i) {
+                        els.sliderPan.value = padData.pan;
+                        els.lblPan.innerText = formatPan(padData.pan);
+                    }
+                });
+                panWrap.appendChild(panBase);
+                panWrap.appendChild(panSlider);
+                ch.appendChild(panWrap);
+                
+                // Vol Section
+                const volTitle = document.createElement('div');
+                volTitle.className = 'mixer-label-title mt-2 mb-1';
+                volTitle.innerText = 'VOLUME';
+                ch.appendChild(volTitle);
+
+                const faderWrap = document.createElement('div');
+                faderWrap.className = 'relative flex justify-center items-center flex-grow w-full my-1 min-h-[80px]';
+                
+                const fader = document.createElement('input');
+                fader.type = 'range';
+                fader.min = 0; fader.max = 2; fader.step = 0.05;
+                fader.value = padData.volume !== undefined ? padData.volume : 1.0;
+                fader.style.transform = 'rotate(-90deg)';
+                fader.style.width = '80px';
+                fader.style.height = '6px';
+                fader.style.margin = '0';
+                fader.style.position = 'absolute';
+                fader.className = 'bg-transparent appearance-none cursor-pointer vol-styled z-10 outline-none';
+                
+                const faderBg = document.createElement('div');
+                faderBg.className = 'absolute inset-y-0 w-[6px] rounded-full pointer-events-none vol-track-glow border border-black';
+                
+                const updateGlow = (val) => {
+                    const pct = Math.min(100, Math.max(0, (val / 2) * 100));
+                    faderBg.style.setProperty('--val', pct + '%');
+                };
+                updateGlow(fader.value);
+                
+                fader.addEventListener('input', (e) => {
+                    padData.volume = parseFloat(e.target.value);
+                    updateGlow(padData.volume);
+                    if (state.trackBusses && state.trackBusses[i]) {
+                        state.trackBusses[i].gain.value = padData.volume;
+                    }
+                    if (state.selectedPadIndex === i) {
+                        els.sliderVolume.value = padData.volume;
+                        els.lblVolume.innerText = padData.volume.toFixed(2);
+                    }
+                });
+                faderWrap.appendChild(faderBg);
+                faderWrap.appendChild(fader);
+                ch.appendChild(faderWrap);
+                
+                // Mute / Solo buttons
+                const btnWrap = document.createElement('div');
+                btnWrap.className = 'flex flex-row w-full gap-2 justify-center mt-2';
+                
+                const btnMute = document.createElement('button');
+                const isMuted = state.seqTracks[i].muted;
+                btnMute.className = `w-8 h-6 flex justify-center items-center text-[10px] font-bold mixer-btn ${isMuted ? 'm-active' : ''}`;
+                btnMute.innerText = 'M';
+                btnMute.addEventListener('click', () => {
+                    state.seqTracks[i].muted = !state.seqTracks[i].muted;
+                    renderMixer();
+                    renderSequencer();
+                });
+                
+                const btnSolo = document.createElement('button');
+                const isSoloed = state.seqTracks[i].soloed;
+                btnSolo.className = `w-8 h-6 flex justify-center items-center text-[10px] font-bold mixer-btn ${isSoloed ? 's-active' : ''}`;
+                btnSolo.innerText = 'S';
+                btnSolo.addEventListener('click', () => {
+                    state.seqTracks[i].soloed = !state.seqTracks[i].soloed;
+                    renderMixer();
+                    renderSequencer();
+                });
+                
+                btnWrap.appendChild(btnMute);
+                btnWrap.appendChild(btnSolo);
+                ch.appendChild(btnWrap);
+
+                // Track Label
+                const lbl = document.createElement('div');
+                lbl.className = 'text-[9px] font-mono font-bold text-zinc-100 bg-zinc-950/50 w-full text-center rounded mt-2 py-1 tracking-wider overflow-hidden text-ellipsis shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]';
+                lbl.style.color = padData.buffer ? '#d4d4d8' : '#52525b';
+                lbl.innerText = padData.buffer ? (padData.name || `TRK ${i+1}`).substring(0, 8).toUpperCase() : `TRK ${i+1}`;
+                ch.appendChild(lbl);
+                
+                els.mixerPanel.appendChild(ch);
+            }
+        }
+
         function updateEditorUI() {
             if (state.selectedPadIndex === null) return;
             const pad = state.pads[state.selectedPadIndex];
@@ -1301,11 +1708,27 @@
             const pan = pad.pan || 0;
             els.sliderPan.value = pan;
             els.lblPan.innerText = pan === 0 ? 'C' : (pan < 0 ? `L${Math.abs(Math.round(pan*100))}` : `R${Math.round(pan*100)}`);
+            
+            const attack = pad.attack || 0;
+            if (els.sliderAttack) els.sliderAttack.value = attack;
+            if (els.lblAttack) els.lblAttack.innerText = parseFloat(attack).toFixed(2) + 's';
+            
+            const decay = pad.decay !== undefined ? pad.decay : 10;
+            if (els.sliderDecay) els.sliderDecay.value = decay;
+            if (els.lblDecay) els.lblDecay.innerText = parseFloat(decay).toFixed(1) + 's';
+            
+            const delay = pad.delaySend || 0;
+            if (els.sliderPadDelay) els.sliderPadDelay.value = delay;
+            if (els.lblPadDelay) els.lblPadDelay.innerText = Math.round(delay * 100) + '%';
+            
+            const reverb = pad.reverbSend || 0;
+            if (els.sliderPadReverb) els.sliderPadReverb.value = reverb;
+            if (els.lblPadReverb) els.lblPadReverb.innerText = Math.round(reverb * 100) + '%';
 
             drawEditorWaveform();
         }
 
-        els.stepSizerInput.addEventListener('change', (e) => {
+        els.stepSizerInput.addEventListener('input', (e) => {
             if (state.selectedPadIndex !== null) {
                 const pad = state.pads[state.selectedPadIndex];
                 if (!pad.buffer) return;
@@ -1330,6 +1753,12 @@
                 drawPadThumb(state.selectedPadIndex);
             }
         });
+
+        if (els.selSeqResolution) {
+            els.selSeqResolution.addEventListener('change', (e) => {
+                state.stepResolution = parseInt(e.target.value) || 16;
+            });
+        }
 
         els.btnOneShot.addEventListener('click', () => {
             if (state.selectedPadIndex !== null) {
@@ -1385,15 +1814,55 @@
             if (state.selectedPadIndex !== null) {
                 const vol = parseFloat(e.target.value);
                 state.pads[state.selectedPadIndex].volume = vol;
+                if (state.trackBusses && state.trackBusses[state.selectedPadIndex]) {
+                    state.trackBusses[state.selectedPadIndex].gain.value = vol;
+                }
                 els.lblVolume.innerText = vol.toFixed(2);
             }
         });
 
         els.sliderPan.addEventListener('input', (e) => {
             if (state.selectedPadIndex !== null) {
-                const pan = parseFloat(e.target.value);
-                state.pads[state.selectedPadIndex].pan = pan;
-                els.lblPan.innerText = pan === 0 ? 'C' : (pan < 0 ? `L${Math.abs(Math.round(pan*100))}` : `R${Math.round(pan*100)}`);
+                state.pads[state.selectedPadIndex].pan = parseFloat(e.target.value);
+                els.lblPan.innerText = formatPan(e.target.value);
+            }
+        });
+        
+        els.sliderAttack.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                state.pads[state.selectedPadIndex].attack = parseFloat(e.target.value);
+                els.lblAttack.innerText = parseFloat(e.target.value).toFixed(2);
+            }
+        });
+        
+        els.sliderDecay.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                state.pads[state.selectedPadIndex].decay = parseFloat(e.target.value);
+                els.lblDecay.innerText = e.target.value >= 10 ? 'MAX' : parseFloat(e.target.value).toFixed(2);
+            }
+        });
+        
+        els.sliderPadDelay.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                
+                const val = parseFloat(e.target.value);
+                state.pads[state.selectedPadIndex].delaySend = val;
+                if (state.trackDelaySends && state.trackDelaySends[state.selectedPadIndex]) {
+                    state.trackDelaySends[state.selectedPadIndex].gain.value = val;
+                }
+                els.lblPadDelay.innerText = Math.round(val * 100) + '%';
+            }
+        });
+        
+        els.sliderPadReverb.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                
+                const val = parseFloat(e.target.value);
+                state.pads[state.selectedPadIndex].reverbSend = val;
+                if (state.trackReverbSends && state.trackReverbSends[state.selectedPadIndex]) {
+                    state.trackReverbSends[state.selectedPadIndex].gain.value = val;
+                }
+                els.lblPadReverb.innerText = Math.round(val * 100) + '%';
             }
         });
 
@@ -1404,66 +1873,227 @@
                 pad.buffer = null;
                 pad.offset = 0;
                 pad.duration = 1;
-                pad.label = undefined;
+                pad.label = '';
                 pad.sourceType = null;
                 pad.fileData = null;
                 pad.synthName = null;
-                pad.colorClass = 'text-zinc-400 bg-zinc-800 border-zinc-700';
-                pad.colorHex = '#71717a';
                 
                 renderPads();
+                renderMixer();
                 updateEditorUI();
             }
         });
+        
+        els.btnClearAll.addEventListener('click', () => {
+                state.pads.forEach((pad, i) => {
+                    killPadAudio(pad);
+                    pad.buffer = null;
+                    pad.offset = 0;
+                    pad.duration = 1;
+                    pad.label = '';
+                    pad.sourceType = null;
+                    pad.fileData = null;
+                    pad.synthName = null;
+                    
+                    // Reset FX
+                    pad.pan = 0;
+                    pad.volume = 1.0;
+                    pad.attack = 0;
+                    pad.decay = 10;
+                    pad.delaySend = 0;
+                    pad.reverbSend = 0;
+                    
+                    // Reset Seq Tracks
+                    state.seqTracks[i].muted = false;
+                    state.seqTracks[i].soloed = false;
+                    state.seqTracks[i].steps = Array(32).fill(false);
+                    state.seqTracks[i].stepLocks = Array(32).fill(null);
+                    state.seqTracks[i].trackLength = 32;
+                });
+                state.audioPool = [];
+                renderPads();
+                renderMixer();
+                renderSequencer();
+                updateEditorUI();
+        });
+
+        els.splitMode.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            if (mode === 'number') {
+                els.splitValueLabel.innerText = 'Slices';
+                els.splitValue.min = 1;
+                els.splitValue.max = 12;
+                els.splitValue.step = 1;
+                els.splitValue.value = 4;
+            } else if (mode === 'bars') {
+                els.splitValueLabel.innerText = 'Bars';
+                els.splitValue.min = 0.25;
+                els.splitValue.max = 16;
+                els.splitValue.step = 0.25;
+                els.splitValue.value = 1;
+            } else if (mode === 'seconds') {
+                els.splitValueLabel.innerText = 'Seconds';
+                els.splitValue.min = 0.1;
+                els.splitValue.max = 30;
+                els.splitValue.step = 0.1;
+                els.splitValue.value = 1.0;
+            }
+            updateSplitInfo();
+        });
+        
+        function updateSplitInfo() {
+            if (state.selectedPadIndex === null) return;
+            const sourcePad = state.pads[state.selectedPadIndex];
+            if (!sourcePad.buffer) return;
+            
+            const mode = els.splitMode.value;
+            const val = parseFloat(els.splitValue.value);
+            let numSplits = 1;
+            
+            if (mode === 'number') {
+                numSplits = val;
+            } else if (mode === 'bars') {
+                const beatLen = 60.0 / state.bpm;
+                const barLen = beatLen * 4;
+                const chunkLen = barLen * val;
+                numSplits = Math.ceil(sourcePad.buffer.duration / chunkLen);
+            } else if (mode === 'seconds') {
+                numSplits = Math.ceil(sourcePad.buffer.duration / val);
+            }
+            
+            els.splitInfo.innerText = `This will create ${numSplits} slices on available empty pads.`;
+        }
+        
+        els.splitValue.addEventListener('input', updateSplitInfo);
 
         els.btnSplit8.addEventListener('click', () => {
             if (state.selectedPadIndex === null) return;
             const sourcePad = state.pads[state.selectedPadIndex];
-            const sourceBuffer = sourcePad.buffer;
-            const sourceName = sourcePad.label;
             
-            if (!sourceBuffer) {
+            if (!sourcePad.buffer) {
                 alert("Selected pad has no audio loaded.");
                 return;
             }
 
-            if (sourceBuffer.duration < 0.05) {
+            if (sourcePad.buffer.duration < 0.05) {
                 alert("Sample too short to split.");
                 return;
             }
-
-            // Find pads that are available for slicing
-            // We only split into pads that are completely empty, PLUS the source pad itself.
+            
+            updateSplitInfo();
+            els.splitModal.classList.remove('hidden');
+            els.splitModal.classList.add('flex');
+        });
+        
+        els.btnCancelSplit.addEventListener('click', () => {
+            els.splitModal.classList.add('hidden');
+            els.splitModal.classList.remove('flex');
+        });
+        
+        els.btnConfirmSplit.addEventListener('click', () => {
+            els.splitModal.classList.add('hidden');
+            els.splitModal.classList.remove('flex');
+            
+            if (state.selectedPadIndex === null) return;
+            const sourcePad = state.pads[state.selectedPadIndex];
+            const sourceBuffer = sourcePad.buffer;
+            const sourceName = sourcePad.label || "Sample";
+            
+            if (!sourceBuffer) return;
+            
+            const mode = els.splitMode.value;
+            const val = parseFloat(els.splitValue.value);
+            
+            const startOffset = sourcePad.offset || 0;
+            const totalDuration = sourcePad.duration || sourceBuffer.duration;
+            
+            let sliceLengths = [];
+            
+            if (mode === 'number') {
+                const len = totalDuration / val;
+                for(let i=0; i<val; i++) sliceLengths.push(len);
+            } else if (mode === 'bars') {
+                const beatLen = 60.0 / state.bpm;
+                const barLen = beatLen * 4;
+                const chunkLen = barLen * val;
+                
+                let cur = 0;
+                while (cur < totalDuration) {
+                    const remain = totalDuration - cur;
+                    sliceLengths.push(Math.min(chunkLen, remain));
+                    cur += chunkLen;
+                }
+            } else if (mode === 'seconds') {
+                let cur = 0;
+                while (cur < totalDuration) {
+                    const remain = totalDuration - cur;
+                    sliceLengths.push(Math.min(val, remain));
+                    cur += val;
+                }
+            }
+            
             let availablePads = [];
             for (let i = 0; i < 12; i++) {
-                if (!state.pads[i].buffer || i === state.selectedPadIndex) {
+                if (!state.pads[i].buffer && i !== state.selectedPadIndex) {
                     availablePads.push(i);
                 }
             }
-
-            if (availablePads.length === 1 && availablePads[0] === state.selectedPadIndex) {
-                alert("All other pads are full. Clear some pads to make room for the split samples.");
+            
+            if (availablePads.length === 0) {
+                alert("No empty pads available for split.");
                 return;
             }
-
-            const sliceLen = sourceBuffer.duration / availablePads.length;
-            for (let i = 0; i < availablePads.length; i++) {
+            
+            // Limit splits to available pads
+            const numSplits = Math.min(sliceLengths.length, availablePads.length);
+            
+            let currentOffset = startOffset;
+            for (let i = 0; i < numSplits; i++) {
                 const targetIndex = availablePads[i];
                 const pad = state.pads[targetIndex];
+                const slen = sliceLengths[i];
+                
                 killPadAudio(pad);
-                pad.buffer = sourceBuffer;
+                
+                // Physically slice the buffer to prevent iOS Safari playback bugs
+                const sampleRate = sourceBuffer.sampleRate;
+                const startSample = Math.floor(currentOffset * sampleRate);
+                let endSample = Math.floor((currentOffset + slen) * sampleRate);
+                endSample = Math.min(endSample, sourceBuffer.length);
+                const frameCount = endSample - startSample;
+                
+                let newBuf = sourceBuffer;
+                if (frameCount > 0) {
+                    const ctx = state.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                    newBuf = ctx.createBuffer(sourceBuffer.numberOfChannels, frameCount, sampleRate);
+                    for (let c = 0; c < sourceBuffer.numberOfChannels; c++) {
+                        const channelData = sourceBuffer.getChannelData(c);
+                        const newChannelData = newBuf.getChannelData(c);
+                        for (let s = 0; s < frameCount; s++) {
+                            newChannelData[s] = channelData[startSample + s];
+                        }
+                    }
+                }
+                
+                pad.buffer = newBuf;
                 pad.sourceType = sourcePad.sourceType;
                 pad.fileData = sourcePad.fileData;
                 pad.synthName = sourcePad.synthName;
-                pad.offset = i * sliceLen;
-                pad.duration = sliceLen;
+                pad.offset = 0; // Offset is now 0 because the buffer is exactly the slice
+                pad.duration = slen;
+                pad.oneShot = true; // Slices default to one-shot
+                console.log("Split pad", targetIndex, "offset:", pad.offset, "duration:", pad.duration, "buffer.duration:", pad.buffer.duration);
                 pad.colorClass = palette[targetIndex];
                 pad.colorHex = paletteHex[targetIndex];
                 pad.label = `${sourceName} [${i+1}]`;
+                
+                currentOffset += slen;
             }
+            
             renderPads();
             renderSequencer();
             updateEditorUI();
+            renderMixer();
         });
 
         els.audioInput.addEventListener('change', async (e) => {
@@ -1518,8 +2148,10 @@
                     if (!state.pads[i].buffer) emptyPads.push(i);
                 }
                 
-                for (let i of emptyPads) {
-                    const poolItem = newlyDecoded[Math.floor(Math.random() * newlyDecoded.length)];
+                const numToAssign = Math.min(emptyPads.length, newlyDecoded.length);
+                for (let idx = 0; idx < numToAssign; idx++) {
+                    const i = emptyPads[idx];
+                    const poolItem = newlyDecoded[idx];
                     state.pads[i].buffer = poolItem.buffer;
                     state.pads[i].offset = 0; 
                     state.pads[i].duration = poolItem.buffer.duration;
@@ -1564,15 +2196,7 @@
                 const trackData = state.seqTracks[t];
                 const padData = state.pads[t];
                 
-                const muteBtn = document.getElementById(`mute-btn-${t}`);
-                if (muteBtn) {
-                    muteBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors shrink-0 ${trackData.muted ? 'bg-red-900/80 text-red-200' : 'bg-zinc-800 text-zinc-500'}`;
-                }
 
-                const soloBtn = document.getElementById(`solo-btn-${t}`);
-                if (soloBtn) {
-                    soloBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors shrink-0 ${trackData.soloed ? 'bg-yellow-600 text-yellow-100' : 'bg-zinc-800 text-zinc-500'}`;
-                }
 
                 for (let s = 0; s < 32; s++) {
                     const stepBtn = document.getElementById(`seq-step-${t}-${s}`);
@@ -1670,7 +2294,13 @@
             
             const lock = state.seqTracks[t].stepLocks[s] || {};
             const val = lock.pitch !== undefined ? lock.pitch : (state.pads[state.seqTracks[t].padIndex].pitch || 0);
+            
             const volVal = lock.volume !== undefined ? lock.volume : (state.pads[state.seqTracks[t].padIndex].volume !== undefined ? state.pads[state.seqTracks[t].padIndex].volume : 1.0);
+            const probVal = lock.prob !== undefined ? lock.prob : 100;
+            if (els.pLockProb) {
+                els.pLockProb.value = probVal;
+                els.pLockProbVal.innerText = probVal + '%';
+            }
             
             els.pLockPitch.value = val;
             els.pLockPitchVal.innerText = val;
@@ -1705,6 +2335,20 @@
             }
         });
         
+        
+        if (els.pLockProb) {
+            els.pLockProb.addEventListener('input', (e) => {
+                if (state.editingPLock) {
+                    const {t, s} = state.editingPLock;
+                    const prob = parseInt(e.target.value);
+                    els.pLockProbVal.innerText = prob + '%';
+                    if (!state.seqTracks[t].stepLocks[s]) state.seqTracks[t].stepLocks[s] = {};
+                    state.seqTracks[t].stepLocks[s].prob = prob;
+                    renderSequencer();
+                }
+            });
+        }
+        
         els.btnRemovePLock.addEventListener('click', () => {
             if (state.editingPLock) {
                 const {t, s} = state.editingPLock;
@@ -1734,16 +2378,25 @@
 
             const time = state.audioCtx.currentTime;
             chokePad(padData);
+            if (state.trackDelaySends && state.trackDelaySends[padIndex]) {
+                state.trackDelaySends[padIndex].gain.value = padData.delaySend || 0;
+            }
+            if (state.trackReverbSends && state.trackReverbSends[padIndex]) {
+                state.trackReverbSends[padIndex].gain.value = padData.reverbSend || 0;
+            }
 
             const source = state.audioCtx.createBufferSource();
             source.buffer = padData.buffer;
             source.playbackRate.value = Math.pow(2, (padData.pitch || 0) / 12);
             const gain = state.audioCtx.createGain();
             
-            const vol = padData.volume !== undefined ? padData.volume : 1.0;
-
+            
+            const pVol = 1.0; // Volume is now entirely handled by trackBusses!
+            const attack = Number(padData.attack || 0);
+            const decay = Number(padData.decay !== undefined ? padData.decay : 10);
+            
             gain.gain.setValueAtTime(0, time);
-            gain.gain.linearRampToValueAtTime(vol, time + 0.005);
+            gain.gain.linearRampToValueAtTime(pVol, time + attack + 0.005);
             
             let lastNode = gain;
             if (padData.pan) {
@@ -1757,13 +2410,15 @@
             lastNode.connect(state.trackBusses[padIndex]);
 
             const safeDuration = Math.max(0.01, Math.min(padData.duration, padData.buffer.duration - padData.offset));
-
             if (padData.oneShot) {
-                source.start(time, padData.offset, safeDuration);
-                const fadeDur = Math.min(0.015, safeDuration / 2);
-                gain.gain.setValueAtTime(vol, time + safeDuration - fadeDur);
-                gain.gain.linearRampToValueAtTime(0, time + safeDuration);
-                source.stop(time + safeDuration);
+                const actualDur = Math.min(safeDuration, padData.decay !== undefined ? padData.decay : 10);
+                const fadeDur = Math.min(0.015, actualDur / 2);
+                gain.gain.setValueAtTime(pVol, time + actualDur - fadeDur);
+                gain.gain.linearRampToValueAtTime(0, time + actualDur);
+                source.start(time, padData.offset);
+                try {
+                    source.stop(time + actualDur);
+                } catch(e) {}
                 
                 const voice = { source, gain };
                 padData.scheduledNodes.push(voice);
@@ -1772,39 +2427,47 @@
                     if (idx > -1) padData.scheduledNodes.splice(idx, 1);
                 };
                 padData.manualNodes = null;
-
             } else {
-                if (padData.duration < padData.buffer.duration - padData.offset) {
-                    source.start(time, padData.offset, padData.duration);
-                } else {
-                    source.start(time, padData.offset);
+                source.start(time, padData.offset);
+                if (safeDuration < padData.buffer.duration - padData.offset) {
+                    try {
+                        source.stop(time + safeDuration);
+                    } catch(e) {}
                 }
-                padData.manualNodes = { source, gain, started: true };
+                padData.manualNodes = { source, gain };
             }
         }
-
         function releaseManualPad(padIndex) {
             const padData = state.pads[padIndex];
-            if (!padData.manualNodes || !padData.manualNodes.started) return;
-
+            if (!padData || !padData.manualNodes || !state.audioCtx) return;
+            
+            // If in One-Shot mode, releasing the key should NOT choke the pad!
+            if (padData.oneShot) {
+                padData.manualNodes = null;
+                return;
+            }
+            
             const { source, gain } = padData.manualNodes;
             const time = state.audioCtx.currentTime;
-
-            if (gain.gain.cancelAndHoldAtTime) {
-                gain.gain.cancelAndHoldAtTime(time);
-            } else {
-                gain.gain.cancelScheduledValues(time);
-            }
-
-            gain.gain.linearRampToValueAtTime(0, time + 0.05);
-
+            
+            // Note: decay might be stored as a string if we aren't careful, so cast to Number
+            const decay = Number(padData.decay !== undefined ? padData.decay : 10);
+            
+            // For release phase, we don't necessarily want a 10s release on key up.
+            // But we'll just use a fast fade out to avoid clicks in gate mode.
+            const fadeDur = 0.05; 
+            
             try {
-                source.stop(time + 0.05);
-            } catch {}
-
+                gain.gain.cancelScheduledValues(time);
+                gain.gain.setValueAtTime(gain.gain.value, time);
+                gain.gain.linearRampToValueAtTime(0, time + fadeDur);
+                source.stop(time + fadeDur);
+            } catch(e) {
+                console.warn(e);
+            }
             padData.manualNodes = null;
         }
-
+        
         function triggerSequencerSound(padIndex, scheduledTime, basePlayDuration, pLocks = null) {
             const padData = state.pads[padIndex];
             if (!padData.buffer || !state.audioCtx) return;
@@ -1817,19 +2480,28 @@
             const effectivePitch = pLocks && pLocks.pitch !== undefined ? pLocks.pitch : (padData.pitch || 0);
             source.playbackRate.value = Math.pow(2, effectivePitch / 12);
             
-            const padVol = padData.volume !== undefined ? padData.volume : 1.0;
-            const effectiveVol = pLocks && pLocks.volume !== undefined ? pLocks.volume : padVol;
+            // padData.volume is applied via the track bus. pLocks.volume acts as a relative modifier.
+            const baseVol = 1.0;
+            const effectiveVol = pLocks && pLocks.volume !== undefined ? pLocks.volume : baseVol;
 
             const gain = state.audioCtx.createGain();
+            const attack = Number(padData.attack || 0);
+            const decay = Number(padData.decay !== undefined ? padData.decay : 10);
+            
             gain.gain.setValueAtTime(0, scheduledTime);
-            gain.gain.linearRampToValueAtTime(effectiveVol, scheduledTime + 0.005);
+            gain.gain.linearRampToValueAtTime(Number(effectiveVol), scheduledTime + attack + 0.005);
             
             const playDuration = padData.oneShot ? padData.duration : Math.min(basePlayDuration, padData.duration);
-            const safeDuration = Math.max(0.01, Math.min(playDuration, padData.buffer.duration - padData.offset));
+            const rawSafeDuration = Math.max(0.01, Math.min(playDuration, padData.buffer.duration - padData.offset));
+            const safeDuration = Math.min(rawSafeDuration, decay);
             
-            const fadeDur = Math.min(0.015, safeDuration / 2);
-            gain.gain.setValueAtTime(effectiveVol, scheduledTime + safeDuration - fadeDur);
-            gain.gain.linearRampToValueAtTime(0, scheduledTime + safeDuration);
+            
+            gain.gain.setValueAtTime(0, scheduledTime);
+            gain.gain.linearRampToValueAtTime(Number(effectiveVol), scheduledTime + attack + 0.005);
+            // setTargetAtTime avoids DOMException overlap errors and is robust in Safari
+            gain.gain.setTargetAtTime(0, scheduledTime + safeDuration - 0.015, 0.015);
+            // absolute cleanup clamp
+            gain.gain.setValueAtTime(0, scheduledTime + safeDuration + 0.1);
             
             let lastNode = gain;
             if (padData.pan) {
@@ -1842,8 +2514,18 @@
             source.connect(gain);
             lastNode.connect(state.trackBusses[padIndex]);
             
-            source.start(scheduledTime, padData.offset, safeDuration);
-            source.stop(scheduledTime + safeDuration);
+            source.start(scheduledTime, padData.offset);
+            try {
+                source.stop(scheduledTime + safeDuration + 0.15); // Pad stop to ensure fading happens
+            } catch(e) {}
+            
+            // Safari Brute-Force Fallback - physically disconnects the node to guarantee silence
+            setTimeout(() => {
+                try {
+                    source.disconnect();
+                    gain.disconnect();
+                } catch(e) {}
+            }, Math.max(0, (scheduledTime + safeDuration - state.audioCtx.currentTime) * 1000 + 150));
 
             const voice = { source, gain };
             padData.scheduledNodes.push(voice);
@@ -1872,16 +2554,16 @@
             }, highlightDelay);
 
             const secondsPerBeat = 60.0 / state.bpm;
-            const timePer16th = 0.25 * secondsPerBeat;
+            const timePerStep = (60.0 / state.bpm) * (4.0 / state.stepResolution);
             
             const swingAmount = els.sliderSwing ? parseFloat(els.sliderSwing.value) : 0;
             let stepTime = state.nextNoteTime;
             
-            // Apply swing to even 16th notes (0-indexed: 1, 3, 5, etc)
+            // Apply swing to even steps (0-indexed: 1, 3, 5, etc)
             if (state.currentStep % 2 !== 0) {
-                stepTime += (timePer16th * swingAmount);
+                stepTime += (timePerStep * swingAmount);
             }
-
+            
             const anySolo = state.seqTracks.some(t => t.soloed);
             for (let t = 0; t < 12; t++) {
                 const tStep = state.currentStep % (state.seqTracks[t].trackLength || 32);
@@ -1890,13 +2572,23 @@
                     if (anySolo && !state.seqTracks[t].soloed) continue;
                     
                     const padData = state.pads[state.seqTracks[t].padIndex];
-                    const basePlayDuration = padData.oneShot ? padData.duration : timePer16th;
+                    const basePlayDuration = padData.oneShot ? padData.duration : timePerStep;
+                    
                     const pLocks = state.seqTracks[t].stepLocks ? state.seqTracks[t].stepLocks[tStep] : null;
+                    if (pLocks && pLocks.prob !== undefined) {
+                        if (Math.random() * 100 > pLocks.prob) continue;
+                    }
+                    if (state.trackDelaySends && state.trackDelaySends[t]) {
+                        state.trackDelaySends[t].gain.value = padData.delaySend || 0;
+                    }
+                    if (state.trackReverbSends && state.trackReverbSends[t]) {
+                        state.trackReverbSends[t].gain.value = padData.reverbSend || 0;
+                    }
                     triggerSequencerSound(state.seqTracks[t].padIndex, stepTime, basePlayDuration, pLocks);
                 }
             }
 
-            state.nextNoteTime += timePer16th;
+            state.nextNoteTime += timePerStep;
             state.currentStep = (state.currentStep + 1) % 32;
             
             if (state.currentStep === 0 && els.chkChainScenes && els.chkChainScenes.checked) {
@@ -2129,14 +2821,18 @@
             const prefix = kitNameMap[selectedKit];
             
             const drumMap = [
-                { type: 'kick', name: `${prefix} Kick` },
-                { type: 'snare', name: `${prefix} Snare` },
+                { type: 'kick', name: `${prefix} Kick 1` },
+                { type: 'snare', name: `${prefix} Snare 1` },
                 { type: 'hihat_c', name: `${prefix} Hat (C)` },
                 { type: 'hihat_o', name: `${prefix} Hat (O)` },
                 { type: 'clap', name: `${prefix} Clap` },
-                { type: 'perc', name: `${prefix} Perc` },
-                { type: 'tom_mid', name: `${prefix} Tom` },
-                { type: 'cymbal', name: `${prefix} Cymbal` }
+                { type: 'perc', name: `${prefix} Perc 1` },
+                { type: 'tom_mid', name: `${prefix} Tom Mid` },
+                { type: 'cymbal', name: `${prefix} Cymbal 1` },
+                { type: 'tom_low', name: `${prefix} Tom Low` },
+                { type: 'perc', name: `${prefix} Perc 2` },
+                { type: 'kick', name: `${prefix} Kick 2` },
+                { type: 'snare', name: `${prefix} Snare 2` }
             ];
             
             els.statusDisplay.innerText = `SYNTHESIZING ${prefix.toUpperCase()}...`;
@@ -2167,6 +2863,7 @@
                 const projectData = {
                     id: 'default',
                     bpm: state.bpm,
+                    stepResolution: state.stepResolution,
                     swing: els.sliderSwing.value,
                     scenes: state.scenes,
                     currentSceneIndex: state.currentSceneIndex,
@@ -2189,6 +2886,10 @@
                         pitch: p.pitch,
                         volume: p.volume,
                         pan: p.pan,
+                        attack: p.attack,
+                        decay: p.decay,
+                        delaySend: p.delaySend,
+                        reverbSend: p.reverbSend,
                         oneShot: p.oneShot,
                         reverse: p.reverse,
                         colorClass: p.colorClass,
@@ -2231,8 +2932,10 @@
                     els.statusDisplay.className = 'text-[9px] font-mono text-amber-500 mt-0.5 uppercase tracking-wider';
                     
                     state.bpm = data.bpm || 120;
+                    state.stepResolution = data.stepResolution || 16;
                     els.sliderBpm.value = state.bpm;
                     els.bpmVal.innerText = state.bpm;
+                    if (els.selSeqResolution) els.selSeqResolution.value = state.stepResolution;
                     els.sliderSwing.value = data.swing || 0;
                     
                     state.scenes = data.scenes;
@@ -2280,8 +2983,9 @@
                     }
                     
                     renderPads();
-                    renderSequencer();
-                    updateSceneLabel();
+            renderSequencer();
+            renderMixer();
+            updateSceneLabel();
                     if (state.selectedPadIndex !== null) updateEditorUI();
                     
                     els.statusDisplay.innerText = "PROJ LOADED";
