@@ -274,10 +274,17 @@
                     <div class="flex gap-2 w-full h-10 shrink-0">
                         <button id="btnOneShot" class="touch-target flex-1 bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[11px] text-zinc-400 transition-colors uppercase tracking-wide">One-Shot</button>
                         <button id="btnGate" class="touch-target flex-1 bg-blue-900 border border-blue-500 rounded-lg font-bold text-[11px] text-white transition-colors uppercase tracking-wide">Gate</button>
-                        <div class="flex items-center gap-1 bg-zinc-800 rounded-lg px-2 border border-zinc-700">
-                            <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Pitch</span>
-                            <input type="range" id="sliderPitch" min="-24" max="24" step="1" value="0" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
-                            <span id="lblPitch" class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-6 text-right">0</span>
+                        <div class="flex flex-col gap-1 bg-zinc-800 rounded-lg p-2 border border-zinc-700">
+                            <div class="flex items-center gap-1">
+                                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Pitch</span>
+                                <input type="range" id="sliderPitch" min="-24" max="24" step="1" value="0" class="flex-grow h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                                <span id="lblPitch" class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-6 text-right">0</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Vol</span>
+                                <input type="range" id="sliderVolume" min="0" max="2" step="0.05" value="1" class="flex-grow h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                                <span id="lblVolume" class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-6 text-right">1.0</span>
+                            </div>
                         </div>
                         <button id="btnSplit8" class="touch-target flex-1 bg-orange-900 border border-orange-700 rounded-lg font-bold text-[11px] text-white transition-colors uppercase tracking-wide flex items-center justify-center gap-2">
                             Split Sample
@@ -299,10 +306,17 @@
     <!-- P-Lock Editor Modal -->
     <div id="pLockEditor" class="hidden absolute z-50 bg-zinc-900 border border-orange-500/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] p-2 rounded-lg flex-col gap-3 min-w-[140px]">
         <div class="text-[9px] font-mono text-orange-400 uppercase font-bold tracking-wider" id="pLockLabel">TRK 1 STEP 1</div>
-        <div class="flex items-center gap-2 bg-zinc-800 rounded px-2 py-1">
-            <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase">Pitch</span>
-            <input type="range" id="pLockPitch" min="-24" max="24" step="1" value="0" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
-            <span id="pLockPitchVal" class="text-[9px] font-bold font-mono text-zinc-300 w-6 text-right">0</span>
+        <div class="flex flex-col gap-2 bg-zinc-800 rounded px-2 py-2">
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Pitch</span>
+                <input type="range" id="pLockPitch" min="-24" max="24" step="1" value="0" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                <span id="pLockPitchVal" class="text-[9px] font-bold font-mono text-zinc-300 w-6 text-right">0</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Vol</span>
+                <input type="range" id="pLockVolume" min="0" max="2" step="0.05" value="1" class="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                <span id="pLockVolumeVal" class="text-[9px] font-bold font-mono text-zinc-300 w-6 text-right">1.0</span>
+            </div>
         </div>
         <div class="flex justify-between gap-2 mt-1">
             <button id="btnRemovePLock" class="text-[9px] font-bold bg-red-900/40 hover:bg-red-900/60 text-red-400 px-3 py-1.5 rounded flex-1 uppercase transition-colors">Clear</button>
@@ -684,6 +698,8 @@
             pLockLabel: document.getElementById('pLockLabel'),
             pLockPitch: document.getElementById('pLockPitch'),
             pLockPitchVal: document.getElementById('pLockPitchVal'),
+            pLockVolume: document.getElementById('pLockVolume'),
+            pLockVolumeVal: document.getElementById('pLockVolumeVal'),
             btnRemovePLock: document.getElementById('btnRemovePLock'),
             btnClosePLock: document.getElementById('btnClosePLock'),
             sliderBpm: document.getElementById('sliderBpm'),
@@ -714,6 +730,8 @@
             btnGate: document.getElementById('btnGate'),
             sliderPitch: document.getElementById('sliderPitch'),
             lblPitch: document.getElementById('lblPitch'),
+            sliderVolume: document.getElementById('sliderVolume'),
+            lblVolume: document.getElementById('lblVolume'),
             btnSplit8: document.getElementById('btnSplit8'),
             btnClearPad: document.getElementById('btnClearPad'),
             stepSizerInput: document.getElementById('stepSizerInput'),
@@ -1164,6 +1182,10 @@
 
             els.sliderPitch.value = pad.pitch || 0;
             els.lblPitch.innerText = pad.pitch || 0;
+            
+            const vol = pad.volume !== undefined ? pad.volume : 1.0;
+            els.sliderVolume.value = vol;
+            els.lblVolume.innerText = parseFloat(vol).toFixed(2);
 
             drawEditorWaveform();
         }
@@ -1213,6 +1235,14 @@
                 const pitch = parseInt(e.target.value);
                 state.pads[state.selectedPadIndex].pitch = pitch;
                 els.lblPitch.innerText = pitch;
+            }
+        });
+
+        els.sliderVolume.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                const vol = parseFloat(e.target.value);
+                state.pads[state.selectedPadIndex].volume = vol;
+                els.lblVolume.innerText = vol.toFixed(2);
             }
         });
 
@@ -1489,9 +1519,13 @@
             
             const lock = state.seqTracks[t].stepLocks[s] || {};
             const val = lock.pitch !== undefined ? lock.pitch : (state.pads[state.seqTracks[t].padIndex].pitch || 0);
+            const volVal = lock.volume !== undefined ? lock.volume : (state.pads[state.seqTracks[t].padIndex].volume !== undefined ? state.pads[state.seqTracks[t].padIndex].volume : 1.0);
             
             els.pLockPitch.value = val;
             els.pLockPitchVal.innerText = val;
+            
+            els.pLockVolume.value = volVal;
+            els.pLockVolumeVal.innerText = parseFloat(volVal).toFixed(2);
             
             els.pLockEditor.classList.remove('hidden');
             const rect = btnEl.getBoundingClientRect();
@@ -1505,6 +1539,17 @@
                 els.pLockPitchVal.innerText = e.target.value;
                 if (!state.seqTracks[t].stepLocks[s]) state.seqTracks[t].stepLocks[s] = {};
                 state.seqTracks[t].stepLocks[s].pitch = parseInt(e.target.value);
+                renderSequencer();
+            }
+        });
+        
+        els.pLockVolume.addEventListener('input', (e) => {
+            if (state.editingPLock) {
+                const {t, s} = state.editingPLock;
+                const vol = parseFloat(e.target.value);
+                els.pLockVolumeVal.innerText = vol.toFixed(2);
+                if (!state.seqTracks[t].stepLocks[s]) state.seqTracks[t].stepLocks[s] = {};
+                state.seqTracks[t].stepLocks[s].volume = vol;
                 renderSequencer();
             }
         });
@@ -1543,9 +1588,11 @@
             source.buffer = padData.buffer;
             source.playbackRate.value = Math.pow(2, (padData.pitch || 0) / 12);
             const gain = state.audioCtx.createGain();
+            
+            const vol = padData.volume !== undefined ? padData.volume : 1.0;
 
             gain.gain.setValueAtTime(0, time);
-            gain.gain.linearRampToValueAtTime(1, time + 0.005);
+            gain.gain.linearRampToValueAtTime(vol, time + 0.005);
 
             source.connect(gain);
             gain.connect(state.trackBusses[padIndex]);
@@ -1608,10 +1655,13 @@
             
             const effectivePitch = pLocks && pLocks.pitch !== undefined ? pLocks.pitch : (padData.pitch || 0);
             source.playbackRate.value = Math.pow(2, effectivePitch / 12);
+            
+            const padVol = padData.volume !== undefined ? padData.volume : 1.0;
+            const effectiveVol = pLocks && pLocks.volume !== undefined ? pLocks.volume : padVol;
 
             const gain = state.audioCtx.createGain();
             gain.gain.setValueAtTime(0, scheduledTime);
-            gain.gain.linearRampToValueAtTime(1, scheduledTime + 0.005);
+            gain.gain.linearRampToValueAtTime(effectiveVol, scheduledTime + 0.005);
             
             const playDuration = padData.oneShot ? padData.duration : Math.min(basePlayDuration, padData.duration);
             const safeDuration = Math.max(0.01, Math.min(playDuration, padData.buffer.duration - padData.offset));
@@ -1947,6 +1997,7 @@
                         offset: p.offset,
                         duration: p.duration,
                         pitch: p.pitch,
+                        volume: p.volume,
                         oneShot: p.oneShot,
                         colorClass: p.colorClass,
                         colorHex: p.colorHex
@@ -2009,6 +2060,7 @@
                         state.pads[i].offset = pd.offset || 0;
                         state.pads[i].duration = pd.duration || 1;
                         state.pads[i].pitch = pd.pitch || 0;
+                        state.pads[i].volume = pd.volume !== undefined ? pd.volume : 1.0;
                         state.pads[i].oneShot = !!pd.oneShot;
                         state.pads[i].colorClass = pd.colorClass || palette[i];
                         state.pads[i].colorHex = pd.colorHex || paletteHex[i];
