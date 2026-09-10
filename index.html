@@ -136,10 +136,18 @@
                 <button id="btnSaveProj" class="text-[8px] font-bold bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 rounded hover:bg-zinc-700 uppercase flex-1">Save Proj</button>
                 <button id="btnLoadProj" class="text-[8px] font-bold bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 rounded hover:bg-zinc-700 uppercase flex-1">Load Proj</button>
             </div>
-            <button id="btnLoad808" class="text-[9px] font-bold font-mono bg-blue-900 border border-blue-700 text-blue-200 px-3 rounded hover:bg-blue-800 uppercase h-11 shrink-0 leading-tight flex flex-col items-center justify-center">
-                <span>808</span>
-                <span class="text-[7px]">KIT</span>
-            </button>
+            <div class="flex items-center gap-1 bg-zinc-800 rounded p-1 h-11 border border-zinc-700 shrink-0">
+                <select id="selSynthKit" class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-[9px] font-bold font-mono rounded px-1 h-full uppercase outline-none w-20">
+                    <option value="808">808 Deep</option>
+                    <option value="909">909 Punch</option>
+                    <option value="synthwave">Retro 80s</option>
+                    <option value="glitch">FM Glitch</option>
+                </select>
+                <button id="btnLoadKit" class="bg-blue-900 border border-blue-700 text-blue-200 text-[9px] font-bold font-mono px-2 h-full rounded hover:bg-blue-800 uppercase flex flex-col items-center justify-center leading-tight">
+                    <span>GEN</span>
+                    <span class="text-[7px]">KIT</span>
+                </button>
+            </div>
         </div>
 
         <div class="flex flex-row gap-4 flex-grow max-w-3xl px-4 py-1 bg-black rounded-lg border border-zinc-800">
@@ -687,7 +695,8 @@
             audioInput: document.getElementById('audioInput'),
             btnSaveProj: document.getElementById('btnSaveProj'),
             btnLoadProj: document.getElementById('btnLoadProj'),
-            btnLoad808: document.getElementById('btnLoad808'),
+            selSynthKit: document.getElementById('selSynthKit'),
+            btnLoadKit: document.getElementById('btnLoadKit'),
             statusDisplay: document.getElementById('statusDisplay'),
             btnPlay: document.getElementById('btnPlay'),
             btnRecord: document.getElementById('btnRecord'),
@@ -812,107 +821,264 @@
             return curve;
         }
         
-        async function createSynthDrum(type, audioCtx) {
+        async function createSynthDrum(type, kit, audioCtx) {
             const sampleRate = audioCtx.sampleRate || 44100;
-            const duration = (type === 'cymbal' || type === 'hihat_o' || type === 'tom_low') ? 0.6 : 0.4;
+            const duration = (type === 'cymbal' || type === 'hihat_o' || type === 'tom_low') ? 0.8 : 0.5;
             const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
             const t = offlineCtx.currentTime;
 
-            const createNoise = (dur) => {
+            const masterGain = offlineCtx.createGain();
+            masterGain.gain.setValueAtTime(1, t);
+            masterGain.gain.setValueAtTime(1, Math.max(t, t + duration - 0.01));
+            masterGain.gain.linearRampToValueAtTime(0, t + duration);
+            masterGain.connect(offlineCtx.destination);
+
+            const createNoise = (dur, white = true) => {
                 const len = offlineCtx.sampleRate * dur;
                 const buffer = offlineCtx.createBuffer(1, len, offlineCtx.sampleRate);
                 const data = buffer.getChannelData(0);
-                for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+                for (let i = 0; i < len; i++) {
+                    data[i] = white ? (Math.random() * 2 - 1) : (Math.random() * 2 - 1) * Math.random();
+                }
                 const source = offlineCtx.createBufferSource();
                 source.buffer = buffer;
                 return source;
             };
 
-            if (type === 'kick') {
-                const osc = offlineCtx.createOscillator();
-                const gain = offlineCtx.createGain();
-                osc.frequency.setValueAtTime(150, t);
-                osc.frequency.exponentialRampToValueAtTime(40, t + 0.05);
-                osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.4);
-                gain.gain.setValueAtTime(1, t);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-                osc.connect(gain); gain.connect(offlineCtx.destination);
-                osc.start(t); osc.stop(t + 0.4);
-            } else if (type === 'snare') {
-                const osc = offlineCtx.createOscillator();
-                const gainOsc = offlineCtx.createGain();
-                osc.frequency.setValueAtTime(250, t);
-                osc.frequency.exponentialRampToValueAtTime(150, t + 0.1);
-                gainOsc.gain.setValueAtTime(0.6, t);
-                gainOsc.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
-                osc.connect(gainOsc); gainOsc.connect(offlineCtx.destination);
-                osc.start(t); osc.stop(t + 0.2);
+            const osc = offlineCtx.createOscillator();
+            const gain = offlineCtx.createGain();
 
-                const noise = createNoise(0.3);
+            if (type === 'kick') {
+                if (kit === '909') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(250, t);
+                    osc.frequency.exponentialRampToValueAtTime(50, t + 0.05);
+                    osc.frequency.exponentialRampToValueAtTime(0.001, t + 0.4);
+                    gain.gain.setValueAtTime(1.5, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.45);
+                } else if (kit === 'synthwave') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100, t);
+                    osc.frequency.linearRampToValueAtTime(45, t + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(0.001, t + 0.4);
+                    gain.gain.setValueAtTime(1.5, t);
+                    gain.gain.linearRampToValueAtTime(0.8, t + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.45);
+                } else if (kit === 'glitch') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, t);
+                    osc.frequency.exponentialRampToValueAtTime(30, t + 0.1);
+                    gain.gain.setValueAtTime(1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.25);
+                    
+                    const mod = offlineCtx.createOscillator();
+                    const modGain = offlineCtx.createGain();
+                    mod.frequency.value = 150;
+                    modGain.gain.value = 500;
+                    mod.connect(modGain); modGain.connect(osc.frequency);
+                    mod.start(t); mod.stop(t + 0.3);
+                } else { // 808
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(150, t);
+                    osc.frequency.exponentialRampToValueAtTime(40, t + 0.05);
+                    osc.frequency.exponentialRampToValueAtTime(0.001, t + 0.45);
+                    gain.gain.setValueAtTime(1.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.48);
+                }
+                osc.connect(gain); gain.connect(masterGain);
+                osc.start(t); osc.stop(t + duration);
+
+            } else if (type === 'snare') {
+                const tone = offlineCtx.createOscillator();
+                const toneGain = offlineCtx.createGain();
+                
+                let noiseDur = 0.3;
+                let filterFreq = 1000;
+                
+                if (kit === '909') {
+                    tone.frequency.setValueAtTime(300, t);
+                    tone.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+                    toneGain.gain.setValueAtTime(1, t);
+                    toneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+                    toneGain.gain.linearRampToValueAtTime(0, t + 0.25);
+                    noiseDur = 0.4; filterFreq = 1500;
+                } else if (kit === 'synthwave') { // Gated snare
+                    tone.frequency.setValueAtTime(200, t);
+                    tone.frequency.linearRampToValueAtTime(150, t + 0.05);
+                    toneGain.gain.setValueAtTime(0.8, t);
+                    toneGain.gain.linearRampToValueAtTime(0.001, t + 0.2);
+                    toneGain.gain.linearRampToValueAtTime(0, t + 0.25);
+                    noiseDur = 0.3; filterFreq = 800;
+                } else if (kit === 'glitch') {
+                    tone.type = 'square';
+                    tone.frequency.setValueAtTime(800, t);
+                    tone.frequency.exponentialRampToValueAtTime(100, t + 0.05);
+                    toneGain.gain.setValueAtTime(0.8, t);
+                    toneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                    toneGain.gain.linearRampToValueAtTime(0, t + 0.15);
+                    noiseDur = 0.1; filterFreq = 3000;
+                } else { // 808
+                    tone.frequency.setValueAtTime(250, t);
+                    tone.frequency.exponentialRampToValueAtTime(150, t + 0.1);
+                    toneGain.gain.setValueAtTime(0.8, t);
+                    toneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+                    toneGain.gain.linearRampToValueAtTime(0, t + 0.25);
+                }
+
+                tone.connect(toneGain); toneGain.connect(masterGain);
+                tone.start(t); tone.stop(t + duration);
+
+                const noise = createNoise(noiseDur, kit !== 'glitch');
                 const noiseFilter = offlineCtx.createBiquadFilter();
-                noiseFilter.type = 'highpass';
-                noiseFilter.frequency.value = 1000;
+                noiseFilter.type = kit === '909' ? 'bandpass' : 'highpass';
+                noiseFilter.frequency.value = filterFreq;
                 const noiseGain = offlineCtx.createGain();
-                noiseGain.gain.setValueAtTime(0.5, t);
-                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-                noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(offlineCtx.destination);
-                noise.start(t); noise.stop(t + 0.3);
+                
+                if (kit === 'synthwave') {
+                    // Gated envelope
+                    noiseGain.gain.setValueAtTime(1, t);
+                    noiseGain.gain.setValueAtTime(1, t + 0.15);
+                    noiseGain.gain.linearRampToValueAtTime(0.001, t + 0.18);
+                    noiseGain.gain.linearRampToValueAtTime(0, t + 0.2);
+                } else {
+                    noiseGain.gain.setValueAtTime(0.8, t);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noiseDur);
+                    noiseGain.gain.linearRampToValueAtTime(0, t + noiseDur + 0.05);
+                }
+                
+                noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(masterGain);
+                noise.start(t); noise.stop(t + noiseDur + 0.1);
+
             } else if (type === 'hihat_c' || type === 'hihat_o') {
-                const dur = type === 'hihat_c' ? 0.08 : 0.3;
-                const noise = createNoise(dur);
-                const noiseFilter = offlineCtx.createBiquadFilter();
-                noiseFilter.type = 'highpass';
-                noiseFilter.frequency.value = 7000;
-                const noiseGain = offlineCtx.createGain();
-                noiseGain.gain.setValueAtTime(0.8, t);
-                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
-                noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(offlineCtx.destination);
-                noise.start(t); noise.stop(t + dur);
+                const dur = type === 'hihat_c' ? (kit === 'glitch' ? 0.04 : 0.08) : (kit === '909' ? 0.4 : 0.3);
+                
+                if (kit === '909' || kit === 'glitch') {
+                    // Metallic cluster
+                    const freqs = kit === '909' ? [250, 300, 350, 400, 450, 500] : [800, 1200, 1600];
+                    const mixGain = offlineCtx.createGain();
+                    mixGain.gain.value = kit === '909' ? 0.3 : 0.5;
+                    freqs.forEach(f => {
+                        const mOsc = offlineCtx.createOscillator();
+                        mOsc.type = 'square';
+                        mOsc.frequency.value = f;
+                        mOsc.connect(mixGain);
+                        mOsc.start(t); mOsc.stop(t + dur + 0.05);
+                    });
+                    const hpf = offlineCtx.createBiquadFilter();
+                    hpf.type = 'bandpass';
+                    hpf.frequency.value = kit === '909' ? 7000 : 4000;
+                    const env = offlineCtx.createGain();
+                    env.gain.setValueAtTime(1, t);
+                    env.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                    env.gain.linearRampToValueAtTime(0, t + dur + 0.05);
+                    mixGain.connect(hpf); hpf.connect(env); env.connect(masterGain);
+                } else {
+                    const noise = createNoise(dur, true);
+                    const hpf = offlineCtx.createBiquadFilter();
+                    hpf.type = 'highpass';
+                    hpf.frequency.value = kit === 'synthwave' ? 5000 : 7000;
+                    const env = offlineCtx.createGain();
+                    env.gain.setValueAtTime(1, t);
+                    env.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                    env.gain.linearRampToValueAtTime(0, t + dur + 0.05);
+                    noise.connect(hpf); hpf.connect(env); env.connect(masterGain);
+                    noise.start(t); noise.stop(t + dur + 0.1);
+                }
+
             } else if (type === 'clap') {
-                const noise = createNoise(0.4);
+                const noise = createNoise(0.4, true);
                 const filter = offlineCtx.createBiquadFilter();
-                filter.type = 'bandpass'; filter.frequency.value = 1500;
+                filter.type = 'bandpass'; 
+                filter.frequency.value = kit === '909' ? 2000 : (kit === 'synthwave' ? 1200 : 1500);
                 const gain = offlineCtx.createGain();
                 gain.gain.setValueAtTime(0, t);
-                gain.gain.linearRampToValueAtTime(0.6, t + 0.01);
+                gain.gain.linearRampToValueAtTime(0.8, t + 0.01);
                 gain.gain.linearRampToValueAtTime(0, t + 0.02);
-                gain.gain.linearRampToValueAtTime(0.7, t + 0.03);
+                gain.gain.linearRampToValueAtTime(0.9, t + 0.03);
                 gain.gain.linearRampToValueAtTime(0, t + 0.04);
                 gain.gain.linearRampToValueAtTime(1.0, t + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-                noise.connect(filter); filter.connect(gain); gain.connect(offlineCtx.destination);
-                noise.start(t); noise.stop(t + 0.4);
+                
+                if (kit === 'synthwave') {
+                    gain.gain.setValueAtTime(1.0, t + 0.15);
+                    gain.gain.linearRampToValueAtTime(0.001, t + 0.2); // gated
+                    gain.gain.linearRampToValueAtTime(0, t + 0.25);
+                } else {
+                    const dur = kit === 'glitch' ? 0.15 : 0.3;
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                    gain.gain.linearRampToValueAtTime(0, t + dur + 0.05);
+                }
+                
+                noise.connect(filter); filter.connect(gain); gain.connect(masterGain);
+                noise.start(t); noise.stop(t + 0.5);
+
             } else if (type === 'perc') {
-                const osc1 = offlineCtx.createOscillator(); osc1.type = 'square'; osc1.frequency.value = 800;
-                const osc2 = offlineCtx.createOscillator(); osc2.type = 'square'; osc2.frequency.value = 540;
-                const gain = offlineCtx.createGain();
-                gain.gain.setValueAtTime(0.5, t);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                const osc1 = offlineCtx.createOscillator(); 
+                osc1.type = kit === 'glitch' ? 'sawtooth' : 'square'; 
+                osc1.frequency.value = kit === '909' ? 600 : (kit === 'glitch' ? 2000 : 800);
+                
+                const osc2 = offlineCtx.createOscillator(); 
+                osc2.type = kit === 'glitch' ? 'triangle' : 'square'; 
+                osc2.frequency.value = kit === '909' ? 450 : (kit === 'glitch' ? 300 : 540);
+                
+                const pGain = offlineCtx.createGain();
+                pGain.gain.setValueAtTime(0.6, t);
+                const pDur = kit === 'glitch' ? 0.1 : 0.2;
+                pGain.gain.exponentialRampToValueAtTime(0.001, t + pDur);
+                pGain.gain.linearRampToValueAtTime(0, t + pDur + 0.05);
                 const filter = offlineCtx.createBiquadFilter();
-                filter.type = 'bandpass'; filter.frequency.value = 800;
-                osc1.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(offlineCtx.destination);
-                osc1.start(t); osc1.stop(t + 0.2);
-                osc2.start(t); osc2.stop(t + 0.2);
+                filter.type = 'bandpass'; 
+                filter.frequency.value = kit === 'synthwave' ? 1200 : 800;
+                
+                osc1.connect(filter); osc2.connect(filter); filter.connect(pGain); pGain.connect(masterGain);
+                osc1.start(t); osc1.stop(t + pDur + 0.1);
+                osc2.start(t); osc2.stop(t + pDur + 0.1);
+
             } else if (type === 'tom_mid' || type === 'tom_low') {
-                const startFreq = type === 'tom_mid' ? 180 : 120;
-                const endFreq = type === 'tom_mid' ? 60 : 40;
-                const osc = offlineCtx.createOscillator();
-                const gain = offlineCtx.createGain();
-                osc.frequency.setValueAtTime(startFreq, t);
-                osc.frequency.exponentialRampToValueAtTime(endFreq, t + 0.4);
-                gain.gain.setValueAtTime(0.8, t);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-                osc.connect(gain); gain.connect(offlineCtx.destination);
-                osc.start(t); osc.stop(t + 0.4);
+                let startFreq = type === 'tom_mid' ? 180 : 120;
+                let endFreq = type === 'tom_mid' ? 60 : 40;
+                
+                if (kit === '909') { startFreq *= 1.2; endFreq *= 1.2; }
+                if (kit === 'glitch') { startFreq *= 3; endFreq *= 0.5; }
+                
+                const tOsc = offlineCtx.createOscillator();
+                tOsc.type = kit === 'synthwave' ? 'square' : 'sine';
+                const tGain = offlineCtx.createGain();
+                
+                tOsc.frequency.setValueAtTime(startFreq, t);
+                const tDur = kit === 'glitch' ? 0.1 : 0.4;
+                tOsc.frequency.exponentialRampToValueAtTime(endFreq, t + tDur);
+                
+                tGain.gain.setValueAtTime(kit === 'synthwave' ? 0.4 : 1.0, t);
+                tGain.gain.exponentialRampToValueAtTime(0.001, t + tDur);
+                tGain.gain.linearRampToValueAtTime(0, t + tDur + 0.05);
+                
+                if (kit === 'synthwave') {
+                    const lpf = offlineCtx.createBiquadFilter();
+                    lpf.type = 'lowpass'; lpf.frequency.value = 600;
+                    tOsc.connect(lpf); lpf.connect(tGain);
+                } else {
+                    tOsc.connect(tGain);
+                }
+                
+                tGain.connect(masterGain);
+                tOsc.start(t); tOsc.stop(t + 0.5);
+
             } else if (type === 'cymbal') {
-                const noise = createNoise(0.6);
+                const cDur = kit === 'glitch' ? 0.2 : 0.6;
+                const noise = createNoise(cDur, true);
                 const filter = offlineCtx.createBiquadFilter();
-                filter.type = 'highpass'; filter.frequency.value = 5000;
-                const gain = offlineCtx.createGain();
-                gain.gain.setValueAtTime(0.5, t);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
-                noise.connect(filter); filter.connect(gain); gain.connect(offlineCtx.destination);
-                noise.start(t); noise.stop(t + 0.6);
+                filter.type = 'highpass'; 
+                filter.frequency.value = kit === '909' ? 6000 : 5000;
+                const cGain = offlineCtx.createGain();
+                cGain.gain.setValueAtTime(0.6, t);
+                cGain.gain.exponentialRampToValueAtTime(0.001, t + cDur);
+                cGain.gain.linearRampToValueAtTime(0, t + cDur + 0.05);
+                noise.connect(filter); filter.connect(cGain); cGain.connect(masterGain);
+                noise.start(t); noise.stop(t + 0.7);
             }
 
             return await offlineCtx.startRendering();
@@ -1601,7 +1767,9 @@
 
             if (padData.oneShot) {
                 source.start(time, padData.offset, safeDuration);
-                gain.gain.setTargetAtTime(0, time + Math.max(0, safeDuration - 0.015), 0.015);
+                const fadeDur = Math.min(0.015, safeDuration / 2);
+                gain.gain.setValueAtTime(vol, time + safeDuration - fadeDur);
+                gain.gain.linearRampToValueAtTime(0, time + safeDuration);
                 source.stop(time + safeDuration);
                 
                 const voice = { source, gain };
@@ -1666,7 +1834,9 @@
             const playDuration = padData.oneShot ? padData.duration : Math.min(basePlayDuration, padData.duration);
             const safeDuration = Math.max(0.01, Math.min(playDuration, padData.buffer.duration - padData.offset));
             
-            gain.gain.setTargetAtTime(0, scheduledTime + Math.max(0, safeDuration - 0.015), 0.015);
+            const fadeDur = Math.min(0.015, safeDuration / 2);
+            gain.gain.setValueAtTime(effectiveVol, scheduledTime + safeDuration - fadeDur);
+            gain.gain.linearRampToValueAtTime(0, scheduledTime + safeDuration);
             source.connect(gain);
             gain.connect(state.trackBusses[padIndex]);
             
@@ -1936,27 +2106,36 @@
             }
         });
 
-        els.btnLoad808.addEventListener('click', async () => {
+        els.btnLoadKit.addEventListener('click', async () => {
             initAudioEngine();
             if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
             
+            const selectedKit = els.selSynthKit.value;
+            const kitNameMap = {
+                '808': '808',
+                '909': '909',
+                'synthwave': 'Retro',
+                'glitch': 'Glitch'
+            };
+            const prefix = kitNameMap[selectedKit];
+            
             const drumMap = [
-                { type: 'kick', name: '808 Kick' },
-                { type: 'snare', name: '808 Snare' },
-                { type: 'hihat_c', name: '808 Hat (C)' },
-                { type: 'hihat_o', name: '808 Hat (O)' },
-                { type: 'clap', name: '808 Clap' },
-                { type: 'perc', name: '808 Perc' },
-                { type: 'tom_mid', name: '808 Tom' },
-                { type: 'cymbal', name: '808 Cymbal' }
+                { type: 'kick', name: `${prefix} Kick` },
+                { type: 'snare', name: `${prefix} Snare` },
+                { type: 'hihat_c', name: `${prefix} Hat (C)` },
+                { type: 'hihat_o', name: `${prefix} Hat (O)` },
+                { type: 'clap', name: `${prefix} Clap` },
+                { type: 'perc', name: `${prefix} Perc` },
+                { type: 'tom_mid', name: `${prefix} Tom` },
+                { type: 'cymbal', name: `${prefix} Cymbal` }
             ];
             
-            els.statusDisplay.innerText = "SYNTHESIZING...";
+            els.statusDisplay.innerText = `SYNTHESIZING ${prefix.toUpperCase()}...`;
             els.statusDisplay.className = 'text-[9px] font-mono text-amber-500 mt-0.5 uppercase tracking-wider';
             
             for (let i = 0; i < 8; i++) {
                 const spec = drumMap[i];
-                state.pads[i].buffer = await createSynthDrum(spec.type, state.audioCtx);
+                state.pads[i].buffer = await createSynthDrum(spec.type, selectedKit, state.audioCtx);
                 state.pads[i].offset = 0;
                 state.pads[i].duration = state.pads[i].buffer.duration;
                 state.pads[i].colorClass = palette[i];
@@ -1964,11 +2143,12 @@
                 state.pads[i].label = spec.name;
                 state.pads[i].sourceType = 'synth';
                 state.pads[i].synthName = spec.type;
+                state.pads[i].synthKit = selectedKit;
                 state.pads[i].fileData = null;
             }
             
             renderPads();
-            els.statusDisplay.innerText = "808 KIT LOADED";
+            els.statusDisplay.innerText = `${prefix.toUpperCase()} KIT LOADED`;
             els.statusDisplay.className = 'text-[9px] font-mono text-emerald-500 mt-0.5 uppercase tracking-wider';
         });
         
@@ -1992,6 +2172,7 @@
                     pads: state.pads.map(p => ({
                         sourceType: p.sourceType,
                         synthName: p.synthName,
+                        synthKit: p.synthKit,
                         fileData: p.fileData,
                         label: p.label,
                         offset: p.offset,
@@ -2067,10 +2248,11 @@
                         state.pads[i].label = pd.label || `PAD ${i+1}`;
                         state.pads[i].sourceType = pd.sourceType;
                         state.pads[i].synthName = pd.synthName;
+                        state.pads[i].synthKit = pd.synthKit;
                         state.pads[i].fileData = pd.fileData;
                         
                         if (pd.sourceType === 'synth' && pd.synthName) {
-                            state.pads[i].buffer = await createSynthDrum(pd.synthName, state.audioCtx);
+                            state.pads[i].buffer = await createSynthDrum(pd.synthName, pd.synthKit || '808', state.audioCtx);
                         } else if (pd.sourceType === 'file' && pd.fileData) {
                             try {
                                 const bufferCopy = pd.fileData.slice(0);
