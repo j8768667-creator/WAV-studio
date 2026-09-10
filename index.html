@@ -116,21 +116,21 @@
         }
     </style>
 </head>
-<body class="p-3 gap-3 flex flex-col">
+<body class="p-3 gap-3 flex flex-col antialiased text-zinc-100 bg-black">
 
     <!-- Header & Transport -->
-    <header class="flex flex-row items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-2 rounded-xl shrink-0 h-[72px]">
+    <header class="flex flex-wrap items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-2 rounded-xl shrink-0">
         
         <div class="flex items-center gap-3 pl-2">
             <div>
-                <h1 class="text-xl font-black tracking-tighter">CHOP<span class="text-zinc-500">GRID</span></h1>
+                <h1 class="text-xl font-black tracking-tighter">WAV<span class="text-zinc-500">SEQ</span></h1>
                 <div id="statusDisplay" class="text-[9px] font-mono text-zinc-400 mt-0.5 uppercase tracking-wider">WAITING</div>
             </div>
             
-            <label class="touch-target ml-2 flex flex-col items-center justify-center px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg cursor-pointer transition-colors leading-none h-11">
-                <span class="font-bold text-[11px] uppercase tracking-wide">Load Folder</span>
-                <span class="text-[8px] text-zinc-400 mt-1">Multi-Select WAVs</span>
-                <input type="file" id="audioInput" multiple accept=".wav,audio/wav,audio/x-wav">
+            <label class="touch-target ml-2 flex flex-col items-center justify-center px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg cursor-pointer transition-colors leading-none h-11 shrink-0">
+                <span class="font-bold text-[11px] uppercase tracking-wide whitespace-nowrap">Load WAVs</span>
+                <span class="text-[8px] text-zinc-400 mt-1 whitespace-nowrap">Multi-Select WAVs</span>
+                <input type="file" id="audioInput" class="hidden" multiple accept=".wav,audio/wav,audio/x-wav">
             </label>
             <div class="flex flex-col gap-1 ml-1 shrink-0 h-11 justify-between">
                 <button id="btnSaveProj" class="text-[8px] font-bold bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 rounded hover:bg-zinc-700 uppercase flex-1">Save Proj</button>
@@ -150,7 +150,7 @@
             </div>
         </div>
 
-        <div class="flex flex-row gap-4 flex-grow max-w-3xl px-4 py-1 bg-black rounded-lg border border-zinc-800">
+        <div class="flex flex-row gap-2 xl:gap-4 flex-grow px-2 xl:px-4 py-1 bg-zinc-800 rounded-lg border border-zinc-800 overflow-x-auto min-w-[300px]">
             <div class="flex flex-col flex-1 justify-center">
                 <div class="flex justify-between items-center text-[8px] font-mono text-zinc-400 mb-1">
                     <div class="flex items-center gap-1">
@@ -162,7 +162,7 @@
             <div class="flex flex-col flex-1 justify-center">
                 <div class="flex justify-between items-center text-[8px] font-mono text-zinc-400 mb-1">
                     <div class="flex items-center gap-1">
-                        <span>HPF</span><button id="btnResetHpf" class="text-zinc-600 hover:text-white px-1 bg-zinc-900 rounded font-bold">R</button>
+                        <span>HPF</span><button id="btnResetHpf" class="text-zinc-400 hover:text-zinc-100 px-1 bg-zinc-900 rounded font-bold">R</button>
                     </div>
                     <span id="lblHpf">20Hz</span>
                 </div>
@@ -171,7 +171,7 @@
             <div class="flex flex-col flex-1 justify-center">
                 <div class="flex justify-between items-center text-[8px] font-mono text-zinc-400 mb-1">
                     <div class="flex items-center gap-1">
-                        <span>LPF</span><button id="btnResetLpf" class="text-zinc-600 hover:text-white px-1 bg-zinc-900 rounded font-bold">R</button>
+                        <span>LPF</span><button id="btnResetLpf" class="text-zinc-400 hover:text-zinc-100 px-1 bg-zinc-900 rounded font-bold">R</button>
                     </div>
                     <span id="lblLpf">20.0kHz</span>
                 </div>
@@ -206,29 +206,29 @@
         <div class="flex items-center gap-3 pr-2">
             <div class="flex flex-col w-20">
                 <div class="flex justify-between text-[9px] font-mono text-zinc-400 mb-1">
-                    <span>BPM</span><span id="bpmVal" class="text-white font-bold">120</span>
+                    <span>BPM</span><span id="bpmVal" class="text-zinc-100 font-bold">120</span>
                 </div>
                 <input type="range" id="sliderBpm" min="60" max="180" value="120" class="mini-slider">
             </div>
 
-            <div class="flex flex-col gap-1 w-20 shrink-0">
-                <button id="btnRecord" class="touch-target flex-1 bg-red-900 border-2 border-red-700 text-red-100 rounded-lg font-black text-[9px] transition-colors uppercase">MIX</button>
-                <button id="btnRecordStems" class="touch-target flex-1 bg-red-900/50 border border-red-700/50 text-red-200 rounded-lg font-bold text-[8px] transition-colors uppercase">STEMS</button>
+            <div class="flex gap-1 shrink-0 h-11">
+                <button id="btnRecord" class="px-3 bg-red-900 border-2 border-red-700 text-red-100 rounded-lg font-black text-[9px] transition-colors uppercase min-w-[48px]">MIX</button>
+                <button id="btnRecordStems" class="px-3 bg-red-900/50 border border-red-700/50 text-red-200 rounded-lg font-bold text-[8px] transition-colors uppercase min-w-[48px]">STEMS</button>
             </div>
-            <button id="btnPlay" class="touch-target px-6 bg-blue-600 border-2 border-blue-500 rounded-lg font-black text-sm w-24 text-center transition-colors h-11 uppercase">PLAY</button>
+            <button id="btnPlay" class="touch-target px-6 bg-blue-600 border-2 border-blue-500 rounded-lg font-black text-sm w-24 text-center transition-colors h-11 uppercase text-white">PLAY</button>
         </div>
     </header>
 
     <main class="flex-grow flex flex-col gap-3 overflow-hidden">
         
         <!-- TOP HALF: Sequencer -->
-        <section class="flex flex-col gap-2 flex-grow overflow-hidden border border-zinc-800 rounded-xl bg-zinc-900 p-2">
+        <section class="flex flex-col gap-2 shrink-0 overflow-hidden border border-zinc-800 rounded-xl bg-zinc-900 p-2">
             <div class="flex justify-between items-end shrink-0 px-2 pt-1">
                 <div class="flex items-center gap-3">
                     <h2 class="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-widest hidden sm:block">Sequencer</h2>
-                    <div class="flex items-center gap-1 bg-black rounded p-1 border border-zinc-800">
+                    <div class="flex items-center gap-1 bg-zinc-800 rounded p-1 border border-zinc-800">
                         <button id="btnPrevScene" class="touch-target w-7 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400">◀</button>
-                        <span id="lblScene" class="text-[10px] font-bold font-mono text-white w-16 text-center">SCENE 1</span>
+                        <span id="lblScene" class="text-[10px] font-bold font-mono text-zinc-100 w-16 text-center">SCENE 1</span>
                         <button id="btnNextScene" class="touch-target w-7 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400">▶</button>
                         <button id="btnAddScene" class="touch-target px-2 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400 font-bold ml-1 uppercase">New</button>
                         <button id="btnCopyScene" class="touch-target px-2 h-7 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400 font-bold ml-1 uppercase">Copy</button>
@@ -245,7 +245,7 @@
                         <input type="range" id="sliderSwing" min="0" max="0.75" step="0.01" value="0" class="w-16 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
                     </div>
                     <button id="btnPLockMode" class="touch-target px-2 h-7 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded text-[9px] font-bold uppercase transition-colors shrink-0">P-LOCK</button>
-                    <button id="btnClearSeq" class="touch-target px-3 py-1 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold text-zinc-400 hover:text-white uppercase h-8 shrink-0">Clear Seq</button>
+                    <button id="btnClearSeq" class="touch-target px-3 py-1 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold text-zinc-400 hover:text-zinc-100 uppercase h-8 shrink-0">Clear Seq</button>
                 </div>
             </div>
             
@@ -256,54 +256,58 @@
             </div>
         </section>
 
-        <!-- BOTTOM HALF: Pads and Editor -->
-        <section class="flex flex-row gap-3 shrink-0 h-[190px]">
-            <!-- Left: Pads -->
-            <div id="padGrid" class="grid grid-cols-4 grid-rows-2 gap-2 w-[320px] bg-black p-2 rounded-xl border border-zinc-800 shrink-0">
-                <!-- Pads injected by JS -->
-            </div>
-
-            <!-- Right: Pad Editor -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex-grow flex flex-col gap-2 min-w-0">
-                <div class="flex justify-between items-center border-b border-zinc-800 pb-2 shrink-0">
-                    <h3 class="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider">Pad Editor</h3>
+        <!-- BOTTOM HALF: Editor -->
+        <section class="flex flex-row gap-3 flex-grow overflow-hidden min-h-[170px]">
+            <!-- Pad Editor -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex-grow flex flex-col min-w-0">
+                <div class="flex justify-between items-center shrink-0 h-8 mb-2">
+                    <div class="flex gap-2 items-center h-full">
+                        <h3 class="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider mr-2 hidden sm:block">Pad Editor</h3>
+                        <button id="btnOneShot" class="px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[9px] text-zinc-400 transition-colors uppercase">One-Shot</button>
+                        <button id="btnGate" class="px-2 h-full bg-blue-600 text-white border border-blue-500 rounded-lg font-bold text-[9px] text-white transition-colors uppercase">Gate</button>
+                        <button id="btnReverse" class="px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[9px] text-zinc-400 transition-colors uppercase">Rev</button>
+                        <button id="btnSplit8" class="px-2 h-full bg-orange-600 text-white border border-orange-500 rounded-lg font-bold text-[9px] text-white transition-colors uppercase sm:ml-2">Split</button>
+                        <button id="btnClearPad" class="px-2 h-full bg-red-100 border border-red-300 hover:bg-red-200 rounded-lg font-bold text-[9px] text-red-600 transition-colors uppercase">Clear</button>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <label class="text-[9px] font-mono text-zinc-400">LENGTH (STEPS):</label>
-                        <input type="number" id="stepSizerInput" min="0.1" max="128" step="0.1" class="w-12 h-6 bg-zinc-800 border border-zinc-700 text-white text-[10px] font-mono text-center rounded focus:outline-none focus:border-zinc-500">
-                        <label class="flex items-center gap-1 ml-1 cursor-pointer touch-target h-6 px-1">
+                        <label class="text-[9px] font-mono text-zinc-400 hidden sm:block">LEN:</label>
+                        <input type="number" id="stepSizerInput" min="0.1" max="128" step="0.1" class="w-12 h-6 bg-zinc-800 border border-zinc-700 text-zinc-100 text-[10px] font-mono text-center rounded focus:outline-none focus:border-zinc-500">
+                        <label class="flex items-center gap-1 cursor-pointer h-6">
                             <input type="checkbox" id="chkLockSize" class="w-3 h-3 accent-fuchsia-500" checked>
                             <span class="text-[9px] font-mono text-zinc-400 font-bold uppercase">LOCK</span>
                         </label>
-                        <span id="editPadLabel" class="text-[10px] font-bold font-mono text-white bg-zinc-800 px-2 py-1 rounded ml-1">SELECT PAD</span>
+                        <span id="editPadLabel" class="text-[10px] font-bold font-mono text-zinc-100 bg-zinc-800 px-2 py-1 rounded ml-1 hidden sm:block">SELECT PAD</span>
                     </div>
                 </div>
                 
-                <div class="flex flex-col gap-3 opacity-30 pointer-events-none transition-opacity flex-grow" id="padSettingsPanel">
-                    <div class="flex gap-2 w-full h-10 shrink-0">
-                        <button id="btnOneShot" class="touch-target flex-1 bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[11px] text-zinc-400 transition-colors uppercase tracking-wide">One-Shot</button>
-                        <button id="btnGate" class="touch-target flex-1 bg-blue-900 border border-blue-500 rounded-lg font-bold text-[11px] text-white transition-colors uppercase tracking-wide">Gate</button>
-                        <div class="flex flex-col gap-1 bg-zinc-800 rounded-lg p-2 border border-zinc-700">
-                            <div class="flex items-center gap-1">
-                                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Pitch</span>
-                                <input type="range" id="sliderPitch" min="-24" max="24" step="1" value="0" class="flex-grow h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
-                                <span id="lblPitch" class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-6 text-right">0</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <span class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-8">Vol</span>
-                                <input type="range" id="sliderVolume" min="0" max="2" step="0.05" value="1" class="flex-grow h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
-                                <span id="lblVolume" class="text-[9px] font-bold font-mono text-zinc-400 uppercase w-6 text-right">1.0</span>
-                            </div>
-                        </div>
-                        <button id="btnSplit8" class="touch-target flex-1 bg-orange-900 border border-orange-700 rounded-lg font-bold text-[11px] text-white transition-colors uppercase tracking-wide flex items-center justify-center gap-2">
-                            Split Sample
-                        </button>
-                        <button id="btnClearPad" class="touch-target w-16 bg-red-900/30 border border-red-900/50 hover:bg-red-900/50 hover:border-red-500 rounded-lg font-bold text-[10px] text-red-500 transition-colors uppercase tracking-wide flex items-center justify-center">
-                            Clear
-                        </button>
-                    </div>
-                    <div class="flex flex-col flex-grow relative overflow-hidden rounded-lg border border-zinc-700 bg-black">
+                <div class="flex gap-2 opacity-30 pointer-events-none transition-opacity flex-grow h-full" id="padSettingsPanel">
+                    <div class="flex flex-col flex-grow relative overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800">
                         <canvas id="padWaveCanvas" class="absolute inset-0 w-full h-full touch-none"></canvas>
-                        <div id="padWaveInfo" class="absolute bottom-2 left-0 right-0 text-[10px] font-mono text-zinc-300 drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-center uppercase tracking-wide pointer-events-none">SELECT A PAD</div>
+                        <div id="padWaveInfo" class="absolute bottom-1 left-0 right-0 text-[9px] font-mono text-zinc-400 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)] text-center uppercase tracking-wide pointer-events-none">SELECT A PAD</div>
+                    </div>
+                    
+                    <div class="flex flex-col justify-evenly bg-zinc-900 rounded-lg p-2 md:p-3 border border-zinc-800 w-32 md:w-48 shrink-0">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Pitch</span>
+                                <span id="lblPitch" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">0</span>
+                            </div>
+                            <input type="range" id="sliderPitch" min="-24" max="24" step="1" value="0" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Vol</span>
+                                <span id="lblVolume" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">1.0</span>
+                            </div>
+                            <input type="range" id="sliderVolume" min="0" max="2" step="0.05" value="1" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[9px] font-bold font-mono text-zinc-500 uppercase">Pan</span>
+                                <span id="lblPan" class="text-[9px] font-bold font-mono text-zinc-300 uppercase">C</span>
+                            </div>
+                            <input type="range" id="sliderPan" min="-1" max="1" step="0.05" value="0" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb-sm">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -328,7 +332,7 @@
         </div>
         <div class="flex justify-between gap-2 mt-1">
             <button id="btnRemovePLock" class="text-[9px] font-bold bg-red-900/40 hover:bg-red-900/60 text-red-400 px-3 py-1.5 rounded flex-1 uppercase transition-colors">Clear</button>
-            <button id="btnClosePLock" class="text-[9px] font-bold bg-zinc-700 hover:bg-zinc-600 text-white px-3 py-1.5 rounded flex-1 uppercase transition-colors">Close</button>
+            <button id="btnClosePLock" class="text-[9px] font-bold bg-zinc-700 hover:bg-zinc-600 text-zinc-100 px-3 py-1.5 rounded flex-1 uppercase transition-colors">Close</button>
         </div>
     </div>
 
@@ -361,7 +365,7 @@
                 duration: 1,
                 pitch: 0,
                 oneShot: false, 
-                colorClass: 'text-zinc-600 bg-zinc-800 border-zinc-700',
+                colorClass: 'text-zinc-400 bg-zinc-800 border-zinc-700',
                 colorHex: '#71717a',
                 manualNodes: null, 
                 scheduledNodes: [] // Tracks all fire-and-forget nodes to allow immediate halting
@@ -381,7 +385,6 @@
                 return this.scenes[this.currentSceneIndex];
             },
             
-            assigningTrackIndex: null, 
             selectedPadIndex: null,
             copiedScene: null,
             pLockMode: false,
@@ -484,96 +487,7 @@
             if (selStartX > 0) ctx.fillRect(0, 0, selStartX, H);
             if (selEndX < W) ctx.fillRect(selEndX, 0, W - selEndX, H);
 
-            // 3. Draw Handles
-            if (showHandles) {
-                const handleColor = '#facc15';
-                
-                ctx.fillStyle = handleColor;
-                // Left
-                ctx.fillRect(selStartX - 1, 0, 2, H);
-                ctx.beginPath();
-                ctx.arc(selStartX, H - 12, 7, 0, Math.PI * 2);
-                ctx.fill();
-                // Right
-                ctx.fillRect(selEndX - 1, 0, 2, H);
-                ctx.beginPath();
-                ctx.arc(selEndX, H - 12, 7, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // 4. Draw Floating Loupe if dragging handles
-            if (showHandles && dragState && dragState.active && dragState.padIndex === state.selectedPadIndex && (dragState.handle === 'left' || dragState.handle === 'right')) {
-                const isLeft = dragState.handle === 'left';
-                const dragTime = isLeft ? offset : offset + duration;
-                
-                // Get absolute mouse position clamped to bounds
-                let drawX = Math.max(0, Math.min(W, dragState.mouseX));
-                
-                const lW = 240;
-                const lH = 100;
-                
-                // Keep loupe fully within canvas bounds
-                if (drawX - lW/2 < 10) drawX = 10 + lW/2;
-                if (drawX + lW/2 > W - 10) drawX = W - 10 - lW/2;
-                
-                const drawY = H/2;
-                
-                ctx.save();
-                // Loupe shadow
-                ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                ctx.shadowBlur = 20;
-                ctx.shadowOffsetY = 10;
-                ctx.fillStyle = '#18181b'; // zinc-900
-                
-                ctx.beginPath();
-                ctx.roundRect(drawX - lW/2, drawY - lH/2, lW, lH, 16);
-                ctx.fill();
-                
-                // Stroke
-                ctx.shadowColor = 'transparent';
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#52525b'; // zinc-600
-                ctx.stroke();
-                
-                ctx.clip(); // Mask contents to rounded rect
-                
-                // Determine zoom window (e.g. 0.4 seconds total -> high precision)
-                const zoomWindow = 0.4; 
-                const lStartT = dragTime - zoomWindow/2;
-                const lEndT = dragTime + zoomWindow/2;
-                
-                drawDynamicWaveform(ctx, buffer, drawX - lW/2, drawY - lH/2, lW, lH, lStartT, lEndT, color);
-                
-                // Dim non-selected area inside the loupe
-                ctx.fillStyle = 'rgba(0,0,0,0.65)';
-                if (isLeft) {
-                    ctx.fillRect(drawX - lW/2, drawY - lH/2, lW/2, lH);
-                } else {
-                    ctx.fillRect(drawX, drawY - lH/2, lW/2, lH);
-                }
-
-                // Draw exact center cut-line
-                ctx.fillStyle = '#facc15';
-                ctx.fillRect(drawX - 1, drawY - lH/2, 2, lH);
-                
-                ctx.restore();
-
-                // Draw steps info on top of the loupe
-                const secondsPerBeat = 60.0 / state.bpm;
-                const timePer16th = 0.25 * secondsPerBeat;
-                const steps = (duration / timePer16th).toFixed(1);
-                
-                ctx.font = 'bold 10px monospace';
-                ctx.textAlign = 'center';
-                
-                // Text shadow for readability
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
-                ctx.fillText(`~${steps} STEPS`, drawX, drawY - lH/2 - 8);
-                ctx.fillText(`~${steps} STEPS`, drawX, drawY - lH/2 - 10);
-                
-                ctx.fillStyle = '#facc15';
-                ctx.fillText(`~${steps} STEPS`, drawX, drawY - lH/2 - 9);
-            }
+            // 3. Draw Handles (Removed per request)
         }
 
         function drawPadThumb(i) {
@@ -624,21 +538,19 @@
             const distRight = Math.abs(x - selEndX);
             const isLocked = els.chkLockSize.checked;
 
-            if (isLocked) {
-                // If locked, touching anywhere near or inside the selection moves the body
+            if (distLeft <= 20) {
+                handle = 'left';
+                els.chkLockSize.checked = false;
+            } else if (distRight <= 20) {
+                handle = 'right';
+                els.chkLockSize.checked = false;
+            } else if (isLocked) {
                 if (isInside || distLeft <= grab || distRight <= grab) {
                     handle = 'body';
                 }
             } else {
                 if (isInside) {
-                    // Smart fat-finger protection: narrow selections are always body drags inside
-                    if (selWidth < 80) {
-                        handle = 'body';
-                    } else {
-                        if (x - selStartX <= 20) handle = 'left';
-                        else if (selEndX - x <= 20) handle = 'right';
-                        else handle = 'body';
-                    }
+                    handle = 'body';
                 } else {
                     if (distLeft <= grab) handle = 'left';
                     else if (distRight <= grab) handle = 'right';
@@ -687,7 +599,13 @@
         }
 
         function waveCanvasPointerUp() {
-            if (waveDrag) waveDrag.active = false;
+            if (waveDrag && waveDrag.active) {
+                // If it was a quick click without dragging, play the pad preview
+                if (Math.abs(waveDrag.mouseX - waveDrag.startX) < 3 && state.selectedPadIndex !== null) {
+                    playPad(state.selectedPadIndex, true);
+                }
+                waveDrag.active = false;
+            }
             drawEditorWaveform();
         }
 
@@ -723,7 +641,6 @@
             sliderDelay: document.getElementById('sliderDelay'),
             sliderDrive: document.getElementById('sliderDrive'),
             sliderComp: document.getElementById('sliderComp'),
-            padGrid: document.getElementById('padGrid'),
             seqGrid: document.getElementById('seqGrid'),
             btnPrevScene: document.getElementById('btnPrevScene'),
             btnNextScene: document.getElementById('btnNextScene'),
@@ -737,10 +654,13 @@
             editPadLabel: document.getElementById('editPadLabel'),
             btnOneShot: document.getElementById('btnOneShot'),
             btnGate: document.getElementById('btnGate'),
+            btnReverse: document.getElementById('btnReverse'),
             sliderPitch: document.getElementById('sliderPitch'),
             lblPitch: document.getElementById('lblPitch'),
             sliderVolume: document.getElementById('sliderVolume'),
             lblVolume: document.getElementById('lblVolume'),
+            sliderPan: document.getElementById('sliderPan'),
+            lblPan: document.getElementById('lblPan'),
             btnSplit8: document.getElementById('btnSplit8'),
             btnClearPad: document.getElementById('btnClearPad'),
             stepSizerInput: document.getElementById('stepSizerInput'),
@@ -809,14 +729,15 @@
         }
 
         function makeDistortionCurve(amount) {
-            const k = typeof amount === 'number' ? amount : 50;
+            // amount is 0 to 1
+            const k = typeof amount === 'number' ? amount * 400 : 50;
             const n_samples = 44100;
             const curve = new Float32Array(n_samples);
-            const deg = Math.PI / 180;
-            let x;
             for (let i = 0; i < n_samples; ++i) {
-                x = (i * 2) / n_samples - 1;
-                curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+                const x = (i * 2) / n_samples - 1;
+                // Soft clipping formula with gain compensation:
+                // When k is 0, this simplifies to x.
+                curve[i] = (1 + k) * x / (1 + k * Math.abs(x));
             }
             return curve;
         }
@@ -1115,6 +1036,12 @@
             state.compNode = state.audioCtx.createDynamicsCompressor();
             state.compNode.threshold.value = 0; // Off initially
             state.compNode.ratio.value = 1;
+            state.compNode.knee.value = 30; // Soft knee for punch
+            state.compNode.attack.value = 0.005; // Fast attack
+            state.compNode.release.value = 0.25; // Standard release
+
+            state.compMakeupNode = state.audioCtx.createGain();
+            state.compMakeupNode.gain.value = 1;
             
             state.hpfNode = state.audioCtx.createBiquadFilter();
             state.hpfNode.type = 'highpass';
@@ -1141,15 +1068,16 @@
             state.driveNode.connect(state.hpfNode);
             state.hpfNode.connect(state.lpfNode);
             state.lpfNode.connect(state.compNode);
+            state.compNode.connect(state.compMakeupNode);
             
-            state.compNode.connect(state.outputNode);
+            state.compMakeupNode.connect(state.outputNode);
 
-            state.compNode.connect(state.delayNode);
+            state.compMakeupNode.connect(state.delayNode);
             state.delayNode.connect(state.delayFeedback);
             state.delayFeedback.connect(state.delayNode);
             state.delayNode.connect(delayMix);
 
-            state.compNode.connect(state.reverbNode);
+            state.compMakeupNode.connect(state.reverbNode);
             state.reverbNode.connect(reverbMix);
 
             delayMix.connect(state.outputNode);
@@ -1178,12 +1106,18 @@
             });
             els.sliderDrive.addEventListener('input', (e) => {
                 const amt = parseFloat(e.target.value);
-                state.driveNode.curve = makeDistortionCurve(amt * 100); // amt 0-1 mapped to 0-100 distortion k
+                state.driveNode.curve = makeDistortionCurve(amt); // amt 0-1
             });
             els.sliderComp.addEventListener('input', (e) => {
                 const amt = parseFloat(e.target.value); // 0 to 1
-                state.compNode.threshold.setTargetAtTime(-50 * amt, state.audioCtx.currentTime, 0.05);
+                state.compNode.threshold.setTargetAtTime(-40 * amt, state.audioCtx.currentTime, 0.05);
                 state.compNode.ratio.setTargetAtTime(1 + (19 * amt), state.audioCtx.currentTime, 0.05);
+                if (state.compMakeupNode) {
+                    // Add makeup gain so the compressor is louder when squashed.
+                    // If threshold is -40 and ratio is 20, max attenuation is significant.
+                    // We'll add up to 12dB of makeup gain when comp is maxed out.
+                    state.compMakeupNode.gain.setTargetAtTime(1 + (3 * amt), state.audioCtx.currentTime, 0.05);
+                }
             });
             
             els.btnResetHpf.addEventListener('click', () => {
@@ -1199,75 +1133,74 @@
         }
 
         function initUI() {
-            els.padGrid.innerHTML = '';
-            for (let i = 0; i < 8; i++) {
-                const btn = document.createElement('button');
-                btn.className = `pad touch-target relative overflow-hidden w-full h-full rounded-lg border-b-4 focus:outline-none`;
-                btn.id = `pad-${i}`;
-
+            els.seqGrid.innerHTML = '';
+            for (let t = 0; t < 8; t++) {
+                const trackRow = document.createElement('div');
+                trackRow.className = 'flex items-center gap-0.5 sm:gap-1 h-[28px] w-full'; 
+                
+                const assignBtn = document.createElement('button');
+                assignBtn.id = `pad-${t}`;
+                assignBtn.className = `pad relative overflow-hidden w-[54px] sm:w-[64px] shrink-0 h-full rounded-md border-b-2 bg-zinc-800 flex flex-col items-center justify-center font-mono font-bold transition-colors focus:outline-none`;
+                
                 const canvas = document.createElement('canvas');
-                canvas.id = `pad-wave-${i}`;
+                canvas.id = `pad-wave-${t}`;
                 canvas.className = 'absolute inset-0 w-full h-full';
-                btn.appendChild(canvas);
+                assignBtn.appendChild(canvas);
 
                 const overlay = document.createElement('div');
-                overlay.className = 'relative z-10 flex flex-col justify-between h-full p-1.5 font-mono font-bold text-base pointer-events-none';
+                overlay.className = 'relative z-10 flex flex-col items-center justify-center h-full w-full p-0.5 pointer-events-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]';
 
                 const label = document.createElement('span');
-                label.className = 'drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] text-[12px]';
-                label.innerText = i + 1;
+                label.className = 'text-[9px] text-zinc-300 tracking-wider';
+                label.innerText = `TRK ${t+1}`;
+                
                 const dataLabel = document.createElement('span');
-                dataLabel.id = `pad-data-${i}`;
-                dataLabel.className = 'text-[7px] opacity-90 truncate w-full text-left drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]';
+                dataLabel.id = `pad-data-${t}`;
+                dataLabel.className = 'text-[7px] opacity-90 truncate w-full text-center mt-[1px] text-zinc-400';
                 dataLabel.innerText = 'EMPTY';
 
                 overlay.appendChild(label);
                 overlay.appendChild(dataLabel);
-                btn.appendChild(overlay);
+                assignBtn.appendChild(overlay);
 
-                btn.addEventListener('pointerdown', (e) => {
-                    btn.setPointerCapture(e.pointerId);
+                assignBtn.addEventListener('pointerdown', (e) => {
+                    assignBtn.setPointerCapture(e.pointerId);
                     e.preventDefault();
                     initAudioEngine();
                     if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
                     
-                    if (state.assigningTrackIndex !== null) {
-                        state.seqTracks[state.assigningTrackIndex].padIndex = i;
-                        state.assigningTrackIndex = null;
-                        renderSequencer();
-                    }
-                    selectPadForEdit(i);
-                    playManualPad(i); 
-                    btn.classList.add('pad-active');
+                    selectPadForEdit(t);
+                    playManualPad(t); 
+                    assignBtn.classList.add('pad-active');
                 });
 
                 const releaseHandler = () => {
-                    btn.classList.remove('pad-active');
-                    releaseManualPad(i);
+                    assignBtn.classList.remove('pad-active');
+                    releaseManualPad(t);
                 };
 
-                btn.addEventListener('pointerup', releaseHandler);
-                btn.addEventListener('pointercancel', releaseHandler);
-                btn.addEventListener('pointerleave', releaseHandler);
-
-                els.padGrid.appendChild(btn);
-            }
-
-            els.seqGrid.innerHTML = '';
-            for (let t = 0; t < 8; t++) {
-                const trackRow = document.createElement('div');
-                trackRow.className = 'flex items-center gap-0.5 sm:gap-1 h-[32px] w-full'; 
+                assignBtn.addEventListener('pointerup', releaseHandler);
+                assignBtn.addEventListener('pointercancel', releaseHandler);
+                assignBtn.addEventListener('pointerleave', releaseHandler);
                 
-                const assignBtn = document.createElement('button');
-                assignBtn.id = `track-header-${t}`;
-                assignBtn.className = `touch-target w-[45px] sm:w-[54px] shrink-0 h-full rounded-md border-2 bg-zinc-800 flex flex-col items-center justify-center font-mono font-bold transition-colors`;
-                assignBtn.innerHTML = `<span class="text-[7px] text-zinc-400">TRK ${t+1}</span><span id="track-pad-label-${t}" class="text-[8px]">PAD ${state.seqTracks[t].padIndex + 1}</span>`;
-                
-                assignBtn.addEventListener('click', () => {
-                    state.assigningTrackIndex = (state.assigningTrackIndex === t) ? null : t;
+                const muteBtn = document.createElement('button');
+                muteBtn.id = `mute-btn-${t}`;
+                muteBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors bg-zinc-800 text-zinc-500 shrink-0`;
+                muteBtn.innerText = 'M';
+                muteBtn.addEventListener('click', () => {
+                    state.seqTracks[t].muted = !state.seqTracks[t].muted;
                     renderSequencer();
                 });
-                
+
+                const soloBtn = document.createElement('button');
+                soloBtn.id = `solo-btn-${t}`;
+                soloBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors bg-zinc-800 text-zinc-500 shrink-0`;
+                soloBtn.innerText = 'S';
+                soloBtn.addEventListener('click', () => {
+                    state.seqTracks[t].soloed = !state.seqTracks[t].soloed;
+                    renderSequencer();
+                });
+
                 const lenInput = document.createElement('input');
                 lenInput.type = 'number';
                 lenInput.min = '1';
@@ -1284,6 +1217,8 @@
                 });
 
                 trackRow.appendChild(assignBtn);
+                trackRow.appendChild(muteBtn);
+                trackRow.appendChild(soloBtn);
                 trackRow.appendChild(lenInput);
 
                 for (let s = 0; s < 32; s++) {
@@ -1292,7 +1227,7 @@
                     const isBar = s % 16 === 0;
                     const bgBase = isBar ? 'bg-zinc-600' : (isDownbeat ? 'bg-zinc-700' : 'bg-zinc-800');
                     
-                    stepBtn.className = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-900 ${bgBase}`;
+                    stepBtn.className = `seq-step flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-700 ${bgBase}`;
                     stepBtn.id = `seq-step-${t}-${s}`;
                     
                     stepBtn.addEventListener('click', (e) => {
@@ -1339,11 +1274,17 @@
             const pad = state.pads[state.selectedPadIndex];
             
             if (pad.oneShot) {
-                els.btnOneShot.className = 'touch-target flex-1 bg-yellow-600 border border-yellow-400 rounded-lg font-bold text-[11px] text-white transition-colors uppercase';
-                els.btnGate.className = 'touch-target flex-1 bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[11px] text-zinc-400 transition-colors uppercase';
+                els.btnOneShot.className = 'px-2 h-full bg-yellow-600 text-zinc-900 border border-yellow-500 rounded-lg font-bold text-[10px] text-zinc-100 transition-colors uppercase';
+                els.btnGate.className = 'px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[10px] text-zinc-400 transition-colors uppercase';
             } else {
-                els.btnOneShot.className = 'touch-target flex-1 bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[11px] text-zinc-400 transition-colors uppercase';
-                els.btnGate.className = 'touch-target flex-1 bg-blue-600 border border-blue-400 rounded-lg font-bold text-[11px] text-white transition-colors uppercase';
+                els.btnOneShot.className = 'px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[10px] text-zinc-400 transition-colors uppercase';
+                els.btnGate.className = 'px-2 h-full bg-blue-600 border border-blue-400 rounded-lg font-bold text-[10px] text-white transition-colors uppercase';
+            }
+            
+            if (pad.reverse) {
+                els.btnReverse.className = 'px-2 h-full bg-rose-500 text-white border border-rose-400 rounded-lg font-bold text-[10px] text-white transition-colors uppercase';
+            } else {
+                els.btnReverse.className = 'px-2 h-full bg-zinc-800 border border-zinc-600 rounded-lg font-bold text-[10px] text-zinc-400 transition-colors uppercase';
             }
 
             els.sliderPitch.value = pad.pitch || 0;
@@ -1352,6 +1293,10 @@
             const vol = pad.volume !== undefined ? pad.volume : 1.0;
             els.sliderVolume.value = vol;
             els.lblVolume.innerText = parseFloat(vol).toFixed(2);
+            
+            const pan = pad.pan || 0;
+            els.sliderPan.value = pan;
+            els.lblPan.innerText = pan === 0 ? 'C' : (pan < 0 ? `L${Math.abs(Math.round(pan*100))}` : `R${Math.round(pan*100)}`);
 
             drawEditorWaveform();
         }
@@ -1395,6 +1340,34 @@
                 updateEditorUI();
             }
         });
+        
+        els.btnReverse.addEventListener('click', () => {
+            if (state.selectedPadIndex !== null) {
+                const pad = state.pads[state.selectedPadIndex];
+                pad.reverse = !pad.reverse;
+                
+                if (pad.buffer) {
+                    const ctx = state.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                    const newBuf = ctx.createBuffer(pad.buffer.numberOfChannels, pad.buffer.length, pad.buffer.sampleRate);
+                    for (let c = 0; c < pad.buffer.numberOfChannels; c++) {
+                        const newChannel = newBuf.getChannelData(c);
+                        const oldChannel = pad.buffer.getChannelData(c);
+                        for (let i = 0; i < pad.buffer.length; i++) {
+                            newChannel[i] = oldChannel[pad.buffer.length - 1 - i];
+                        }
+                    }
+                    pad.buffer = newBuf;
+                    
+                    // Flip the slice offset
+                    const oldEnd = pad.offset + pad.duration;
+                    pad.offset = Math.max(0, newBuf.duration - oldEnd);
+                }
+                
+                updateEditorUI();
+                renderPads();
+                drawEditorWaveform();
+            }
+        });
 
         els.sliderPitch.addEventListener('input', (e) => {
             if (state.selectedPadIndex !== null) {
@@ -1412,6 +1385,14 @@
             }
         });
 
+        els.sliderPan.addEventListener('input', (e) => {
+            if (state.selectedPadIndex !== null) {
+                const pan = parseFloat(e.target.value);
+                state.pads[state.selectedPadIndex].pan = pan;
+                els.lblPan.innerText = pan === 0 ? 'C' : (pan < 0 ? `L${Math.abs(Math.round(pan*100))}` : `R${Math.round(pan*100)}`);
+            }
+        });
+
         els.btnClearPad.addEventListener('click', () => {
             if (state.selectedPadIndex !== null) {
                 const pad = state.pads[state.selectedPadIndex];
@@ -1423,7 +1404,7 @@
                 pad.sourceType = null;
                 pad.fileData = null;
                 pad.synthName = null;
-                pad.colorClass = 'text-zinc-600 bg-zinc-800 border-zinc-700';
+                pad.colorClass = 'text-zinc-400 bg-zinc-800 border-zinc-700';
                 pad.colorHex = '#71717a';
                 
                 renderPads();
@@ -1560,9 +1541,10 @@
             for (let i = 0; i < 8; i++) {
                 const padData = state.pads[i];
                 const btn = document.getElementById(`pad-${i}`);
+                if (!btn) continue; // Safety check
                 const dataLabel = document.getElementById(`pad-data-${i}`);
                 
-                btn.className = `pad touch-target relative overflow-hidden w-full h-full rounded-lg border-b-4 focus:outline-none transition-colors ${padData.colorClass}`;
+                btn.className = `pad relative overflow-hidden w-[54px] sm:w-[64px] shrink-0 h-full rounded-md border-b-2 flex flex-col items-center justify-center font-mono font-bold transition-colors focus:outline-none ${padData.colorClass}`;
                 
                 if (padData.buffer) {
                     dataLabel.innerText = padData.label || '';
@@ -1576,18 +1558,17 @@
         function renderSequencer() {
             for (let t = 0; t < 8; t++) {
                 const trackData = state.seqTracks[t];
-                const padData = state.pads[trackData.padIndex];
+                const padData = state.pads[t];
                 
-                const header = document.getElementById(`track-header-${t}`);
-                const label = document.getElementById(`track-pad-label-${t}`);
-                
-                header.className = `touch-target w-[54px] shrink-0 h-full rounded-md border-2 flex flex-col items-center justify-center font-mono font-bold transition-colors ${padData.colorClass}`;
-
-                if (state.assigningTrackIndex === t) {
-                    header.classList.add('assign-mode-active');
+                const muteBtn = document.getElementById(`mute-btn-${t}`);
+                if (muteBtn) {
+                    muteBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors shrink-0 ${trackData.muted ? 'bg-red-900/80 text-red-200' : 'bg-zinc-800 text-zinc-500'}`;
                 }
 
-                label.innerText = `PAD ${trackData.padIndex + 1}`;
+                const soloBtn = document.getElementById(`solo-btn-${t}`);
+                if (soloBtn) {
+                    soloBtn.className = `w-4 h-full text-[8px] rounded flex items-center justify-center font-bold transition-colors shrink-0 ${trackData.soloed ? 'bg-yellow-600 text-yellow-100' : 'bg-zinc-800 text-zinc-500'}`;
+                }
 
                 for (let s = 0; s < 32; s++) {
                     const stepBtn = document.getElementById(`seq-step-${t}-${s}`);
@@ -1597,19 +1578,19 @@
                         stepBtn.classList.add('seq-step-active');
                         const textColorClass = padData.colorClass.split(' ').find(c => c.startsWith('text-'));
                         
-                        let baseClasses = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border seq-step-active transition-colors ${textColorClass}`;
+                        let baseClasses = `seq-step flex-1 min-w-[12px] h-full rounded sm:rounded-md border seq-step-active transition-colors ${textColorClass}`;
                         if (trackData.stepLocks && trackData.stepLocks[s]) {
                             baseClasses += ' border-orange-500 shadow-[inset_0_0_8px_rgba(249,115,22,0.8)]';
                         } else {
-                            baseClasses += ' border-zinc-900';
+                            baseClasses += ' border-zinc-700';
                         }
                         stepBtn.className = baseClasses;
                     } else {
                         const isDownbeat = s % 4 === 0;
                         const isBar = s % 16 === 0;
                         let bgBase = isBar ? 'bg-zinc-600' : (isDownbeat ? 'bg-zinc-700' : 'bg-zinc-800');
-                        if (!isActiveLength) bgBase = 'bg-black opacity-20';
-                        stepBtn.className = `seq-step touch-target flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-900 ${bgBase} transition-colors`;
+                        if (!isActiveLength) bgBase = 'bg-zinc-800 opacity-20';
+                        stepBtn.className = `seq-step flex-1 min-w-[12px] h-full rounded sm:rounded-md border border-zinc-700 ${bgBase} transition-colors`;
                     }
                 }
             }
@@ -1667,10 +1648,10 @@
         els.btnPLockMode.addEventListener('click', () => {
             state.pLockMode = !state.pLockMode;
             if (state.pLockMode) {
-                els.btnPLockMode.classList.add('bg-orange-600', 'text-white', 'border-orange-400');
+                els.btnPLockMode.classList.add('bg-orange-600', 'text-zinc-100', 'border-orange-400');
                 els.btnPLockMode.classList.remove('bg-zinc-800', 'text-zinc-400', 'border-zinc-700');
             } else {
-                els.btnPLockMode.classList.remove('bg-orange-600', 'text-white', 'border-orange-400');
+                els.btnPLockMode.classList.remove('bg-orange-600', 'text-zinc-100', 'border-orange-400');
                 els.btnPLockMode.classList.add('bg-zinc-800', 'text-zinc-400', 'border-zinc-700');
                 els.pLockEditor.classList.add('hidden');
                 state.editingPLock = null;
@@ -1759,9 +1740,17 @@
 
             gain.gain.setValueAtTime(0, time);
             gain.gain.linearRampToValueAtTime(vol, time + 0.005);
+            
+            let lastNode = gain;
+            if (padData.pan) {
+                const panner = state.audioCtx.createStereoPanner();
+                panner.pan.value = padData.pan;
+                gain.connect(panner);
+                lastNode = panner;
+            }
 
             source.connect(gain);
-            gain.connect(state.trackBusses[padIndex]);
+            lastNode.connect(state.trackBusses[padIndex]);
 
             const safeDuration = Math.max(0.01, Math.min(padData.duration, padData.buffer.duration - padData.offset));
 
@@ -1837,8 +1826,17 @@
             const fadeDur = Math.min(0.015, safeDuration / 2);
             gain.gain.setValueAtTime(effectiveVol, scheduledTime + safeDuration - fadeDur);
             gain.gain.linearRampToValueAtTime(0, scheduledTime + safeDuration);
+            
+            let lastNode = gain;
+            if (padData.pan) {
+                const panner = state.audioCtx.createStereoPanner();
+                panner.pan.value = padData.pan;
+                gain.connect(panner);
+                lastNode = panner;
+            }
+            
             source.connect(gain);
-            gain.connect(state.trackBusses[padIndex]);
+            lastNode.connect(state.trackBusses[padIndex]);
             
             source.start(scheduledTime, padData.offset, safeDuration);
             source.stop(scheduledTime + safeDuration);
@@ -1880,9 +1878,13 @@
                 stepTime += (timePer16th * swingAmount);
             }
 
+            const anySolo = state.seqTracks.some(t => t.soloed);
             for (let t = 0; t < 8; t++) {
                 const tStep = state.currentStep % (state.seqTracks[t].trackLength || 32);
                 if (state.seqTracks[t].steps[tStep]) {
+                    if (state.seqTracks[t].muted && !state.seqTracks[t].soloed) continue;
+                    if (anySolo && !state.seqTracks[t].soloed) continue;
+                    
                     const padData = state.pads[state.seqTracks[t].padIndex];
                     const basePlayDuration = padData.oneShot ? padData.duration : timePer16th;
                     const pLocks = state.seqTracks[t].stepLocks ? state.seqTracks[t].stepLocks[tStep] : null;
@@ -2057,9 +2059,12 @@
                 const zip = new JSZip();
                 let hasData = false;
                 for (let i = 0; i < 8; i++) {
+                    if (!state.pads[i].buffer) continue;
                     const blob = getWAVBlob(stemLeftBuffers[i], stemRightBuffers[i], state.audioCtx.sampleRate);
                     if (blob) {
-                        zip.file(`Track_${i+1}.wav`, blob);
+                        const safeLabel = (state.pads[i].label || '').replace(/[^a-zA-Z0-9 -]/g, '').trim().replace(/ +/g, '_');
+                        const fileName = safeLabel ? `Track_${i+1}_${safeLabel}.wav` : `Track_${i+1}.wav`;
+                        zip.file(fileName, blob);
                         hasData = true;
                     }
                 }
@@ -2179,7 +2184,9 @@
                         duration: p.duration,
                         pitch: p.pitch,
                         volume: p.volume,
+                        pan: p.pan,
                         oneShot: p.oneShot,
+                        reverse: p.reverse,
                         colorClass: p.colorClass,
                         colorHex: p.colorHex
                     }))
@@ -2242,7 +2249,9 @@
                         state.pads[i].duration = pd.duration || 1;
                         state.pads[i].pitch = pd.pitch || 0;
                         state.pads[i].volume = pd.volume !== undefined ? pd.volume : 1.0;
+                        state.pads[i].pan = pd.pan || 0;
                         state.pads[i].oneShot = !!pd.oneShot;
+                        state.pads[i].reverse = !!pd.reverse;
                         state.pads[i].colorClass = pd.colorClass || palette[i];
                         state.pads[i].colorHex = pd.colorHex || paletteHex[i];
                         state.pads[i].label = pd.label || `PAD ${i+1}`;
