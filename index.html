@@ -222,7 +222,7 @@
     <main class="flex-grow flex flex-col gap-3 overflow-hidden">
         
         <!-- TOP HALF: Sequencer -->
-        <section class="flex flex-col gap-2 shrink-0 overflow-hidden border border-zinc-800 rounded-xl bg-zinc-900 p-2">
+        <section class="flex flex-col gap-2 shrink overflow-hidden border border-zinc-800 rounded-xl bg-zinc-900 p-2 min-h-[200px] max-h-[50vh]">
             <div class="flex justify-between items-end shrink-0 px-2 pt-1">
                 <div class="flex items-center gap-3">
                     <h2 class="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-widest hidden sm:block">Sequencer</h2>
@@ -249,7 +249,7 @@
                 </div>
             </div>
             
-            <div class="scroller flex flex-col gap-2 flex-grow bg-zinc-900 p-1 rounded-xl overflow-x-auto overflow-y-auto relative">
+            <div class="scroller flex flex-col gap-2 flex-grow bg-zinc-900 p-1 rounded-xl overflow-x-auto overflow-y-auto relative min-h-0">
                 <div id="seqGrid" class="flex flex-col gap-1 w-full min-w-[500px] pb-2">
                     <!-- Tracks injected by JS -->
                 </div>
@@ -359,7 +359,7 @@
             
             // FEATURE: reduced from 16 pads to 8 — this also now maps 1:1
             // with the 8 sequencer tracks by default (track i -> pad i).
-            pads: new Array(8).fill(null).map(() => ({
+            pads: new Array(12).fill(null).map(() => ({
                 buffer: null,
                 offset: 0,
                 duration: 1,
@@ -372,7 +372,7 @@
             })),
             
             scenes: [
-                Array.from({ length: 8 }, (_, i) => ({
+                Array.from({ length: 12 }, (_, i) => ({
                     padIndex: i, 
                     trackLength: 32,
                     steps: new Array(32).fill(false),
@@ -405,15 +405,19 @@
         // can't reach) — kept as parallel arrays, one entry per pad.
         const palette = [
             'text-red-500 bg-red-950 border-red-800',
+            'text-orange-500 bg-orange-950 border-orange-800',
             'text-amber-500 bg-amber-950 border-amber-800',
             'text-lime-500 bg-lime-950 border-lime-800',
             'text-emerald-500 bg-emerald-950 border-emerald-800',
+            'text-teal-500 bg-teal-950 border-teal-800',
             'text-cyan-500 bg-cyan-950 border-cyan-800',
             'text-blue-500 bg-blue-950 border-blue-800',
             'text-violet-500 bg-violet-950 border-violet-800',
-            'text-pink-500 bg-pink-950 border-pink-800'
+            'text-fuchsia-500 bg-fuchsia-950 border-fuchsia-800',
+            'text-pink-500 bg-pink-950 border-pink-800',
+            'text-rose-500 bg-rose-950 border-rose-800'
         ];
-        const paletteHex = ['#ef4444', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+        const paletteHex = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#ec4899', '#f43f5e'];
 
         function drawDynamicWaveform(ctx, buffer, rectX, rectY, rectW, rectH, startTime, endTime, color) {
             const data = buffer.getChannelData(0);
@@ -1134,7 +1138,7 @@
 
         function initUI() {
             els.seqGrid.innerHTML = '';
-            for (let t = 0; t < 8; t++) {
+            for (let t = 0; t < 12; t++) {
                 const trackRow = document.createElement('div');
                 trackRow.className = 'flex items-center gap-0.5 sm:gap-1 h-[28px] w-full'; 
                 
@@ -1249,14 +1253,14 @@
             
             const resizeObserver = new ResizeObserver(() => {
                 if (state.selectedPadIndex !== null) drawEditorWaveform();
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 12; i++) {
                     if (state.pads[i] && state.pads[i].buffer) {
                         drawPadThumb(i);
                     }
                 }
             });
             resizeObserver.observe(els.padWaveCanvas);
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 const thumbCanvas = document.getElementById(`pad-wave-${i}`);
                 if (thumbCanvas) resizeObserver.observe(thumbCanvas);
             }
@@ -1431,7 +1435,7 @@
             // Find pads that are available for slicing
             // We only split into pads that are completely empty, PLUS the source pad itself.
             let availablePads = [];
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 if (!state.pads[i].buffer || i === state.selectedPadIndex) {
                     availablePads.push(i);
                 }
@@ -1510,7 +1514,7 @@
                 
                 // Populate any completely empty pads, strictly retaining all existing pad assignments
                 let emptyPads = [];
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 12; i++) {
                     if (!state.pads[i].buffer) emptyPads.push(i);
                 }
                 
@@ -1538,7 +1542,7 @@
         });
 
         function renderPads() {
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 const padData = state.pads[i];
                 const btn = document.getElementById(`pad-${i}`);
                 if (!btn) continue; // Safety check
@@ -1556,7 +1560,7 @@
         }
 
         function renderSequencer() {
-            for (let t = 0; t < 8; t++) {
+            for (let t = 0; t < 12; t++) {
                 const trackData = state.seqTracks[t];
                 const padData = state.pads[t];
                 
@@ -1618,7 +1622,7 @@
 
         els.btnAddScene.addEventListener('click', () => {
             state.scenes.push(
-                Array.from({ length: 8 }, (_, i) => ({
+                Array.from({ length: 12 }, (_, i) => ({
                     padIndex: i, 
                     trackLength: 32,
                     steps: new Array(32).fill(false),
@@ -1855,7 +1859,7 @@
 
             setTimeout(() => {
                 document.querySelectorAll('.seq-step-playing').forEach(el => el.classList.remove('seq-step-playing'));
-                for (let t = 0; t < 8; t++) {
+                for (let t = 0; t < 12; t++) {
                     const tStep = stepToHighlight % (state.seqTracks[t].trackLength || 32);
                     const el = document.getElementById(`seq-step-${t}-${tStep}`);
                     if (el && state.seqTracks[t].steps[tStep]) {
@@ -1879,7 +1883,7 @@
             }
 
             const anySolo = state.seqTracks.some(t => t.soloed);
-            for (let t = 0; t < 8; t++) {
+            for (let t = 0; t < 12; t++) {
                 const tStep = state.currentStep % (state.seqTracks[t].trackLength || 32);
                 if (state.seqTracks[t].steps[tStep]) {
                     if (state.seqTracks[t].muted && !state.seqTracks[t].soloed) continue;
@@ -2058,7 +2062,7 @@
                 
                 const zip = new JSZip();
                 let hasData = false;
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 12; i++) {
                     if (!state.pads[i].buffer) continue;
                     const blob = getWAVBlob(stemLeftBuffers[i], stemRightBuffers[i], state.audioCtx.sampleRate);
                     if (blob) {
@@ -2081,11 +2085,11 @@
                 stemRightBuffers = [];
                 
             } else {
-                stemLeftBuffers = Array(8).fill(null).map(() => []);
-                stemRightBuffers = Array(8).fill(null).map(() => []);
+                stemLeftBuffers = Array(12).fill(null).map(() => []);
+                stemRightBuffers = Array(12).fill(null).map(() => []);
                 stemRecNodes = [];
                 
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 12; i++) {
                     let rec = state.audioCtx.createScriptProcessor(4096, 2, 2);
                     rec.onaudioprocess = (e) => {
                         if (!state.isRecordingStems) return;
@@ -2138,7 +2142,7 @@
             els.statusDisplay.innerText = `SYNTHESIZING ${prefix.toUpperCase()}...`;
             els.statusDisplay.className = 'text-[9px] font-mono text-amber-500 mt-0.5 uppercase tracking-wider';
             
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 const spec = drumMap[i];
                 state.pads[i].buffer = await createSynthDrum(spec.type, selectedKit, state.audioCtx);
                 state.pads[i].offset = 0;
@@ -2243,7 +2247,7 @@
                         els.sliderComp.value = data.fx.comp; els.sliderComp.dispatchEvent(new Event('input'));
                     }
                     
-                    for (let i = 0; i < 8; i++) {
+                    for (let i = 0; i < 12; i++) {
                         const pd = data.pads[i];
                         state.pads[i].offset = pd.offset || 0;
                         state.pads[i].duration = pd.duration || 1;
