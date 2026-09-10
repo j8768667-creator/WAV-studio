@@ -132,6 +132,14 @@
                 <span class="text-[8px] text-zinc-400 mt-1">Multi-Select WAVs</span>
                 <input type="file" id="audioInput" multiple accept=".wav,audio/wav,audio/x-wav">
             </label>
+            <div class="flex flex-col gap-1 ml-1 shrink-0 h-11 justify-between">
+                <button id="btnSaveProj" class="text-[8px] font-bold bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 rounded hover:bg-zinc-700 uppercase flex-1">Save Proj</button>
+                <button id="btnLoadProj" class="text-[8px] font-bold bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 rounded hover:bg-zinc-700 uppercase flex-1">Load Proj</button>
+            </div>
+            <button id="btnLoad808" class="text-[9px] font-bold font-mono bg-blue-900 border border-blue-700 text-blue-200 px-3 rounded hover:bg-blue-800 uppercase h-11 shrink-0 leading-tight flex flex-col items-center justify-center">
+                <span>808</span>
+                <span class="text-[7px]">KIT</span>
+            </button>
         </div>
 
         <div class="flex flex-row gap-4 flex-grow max-w-3xl px-4 py-1 bg-black rounded-lg border border-zinc-800">
@@ -663,6 +671,9 @@
 
         const els = {
             audioInput: document.getElementById('audioInput'),
+            btnSaveProj: document.getElementById('btnSaveProj'),
+            btnLoadProj: document.getElementById('btnLoadProj'),
+            btnLoad808: document.getElementById('btnLoad808'),
             statusDisplay: document.getElementById('statusDisplay'),
             btnPlay: document.getElementById('btnPlay'),
             btnRecord: document.getElementById('btnRecord'),
@@ -782,6 +793,121 @@
             }
             return curve;
         }
+        
+        async function createSynthDrum(type, audioCtx) {
+            const sampleRate = audioCtx.sampleRate || 44100;
+            const duration = (type === 'cymbal' || type === 'hihat_o' || type === 'tom_low') ? 0.6 : 0.4;
+            const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+            const t = offlineCtx.currentTime;
+
+            const createNoise = (dur) => {
+                const len = offlineCtx.sampleRate * dur;
+                const buffer = offlineCtx.createBuffer(1, len, offlineCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+                const source = offlineCtx.createBufferSource();
+                source.buffer = buffer;
+                return source;
+            };
+
+            if (type === 'kick') {
+                const osc = offlineCtx.createOscillator();
+                const gain = offlineCtx.createGain();
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.exponentialRampToValueAtTime(40, t + 0.05);
+                osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.4);
+                gain.gain.setValueAtTime(1, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                osc.connect(gain); gain.connect(offlineCtx.destination);
+                osc.start(t); osc.stop(t + 0.4);
+            } else if (type === 'snare') {
+                const osc = offlineCtx.createOscillator();
+                const gainOsc = offlineCtx.createGain();
+                osc.frequency.setValueAtTime(250, t);
+                osc.frequency.exponentialRampToValueAtTime(150, t + 0.1);
+                gainOsc.gain.setValueAtTime(0.6, t);
+                gainOsc.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                osc.connect(gainOsc); gainOsc.connect(offlineCtx.destination);
+                osc.start(t); osc.stop(t + 0.2);
+
+                const noise = createNoise(0.3);
+                const noiseFilter = offlineCtx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 1000;
+                const noiseGain = offlineCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.5, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(offlineCtx.destination);
+                noise.start(t); noise.stop(t + 0.3);
+            } else if (type === 'hihat_c' || type === 'hihat_o') {
+                const dur = type === 'hihat_c' ? 0.08 : 0.3;
+                const noise = createNoise(dur);
+                const noiseFilter = offlineCtx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 7000;
+                const noiseGain = offlineCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.8, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+                noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(offlineCtx.destination);
+                noise.start(t); noise.stop(t + dur);
+            } else if (type === 'clap') {
+                const noise = createNoise(0.4);
+                const filter = offlineCtx.createBiquadFilter();
+                filter.type = 'bandpass'; filter.frequency.value = 1500;
+                const gain = offlineCtx.createGain();
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.6, t + 0.01);
+                gain.gain.linearRampToValueAtTime(0, t + 0.02);
+                gain.gain.linearRampToValueAtTime(0.7, t + 0.03);
+                gain.gain.linearRampToValueAtTime(0, t + 0.04);
+                gain.gain.linearRampToValueAtTime(1.0, t + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                noise.connect(filter); filter.connect(gain); gain.connect(offlineCtx.destination);
+                noise.start(t); noise.stop(t + 0.4);
+            } else if (type === 'perc') {
+                const osc1 = offlineCtx.createOscillator(); osc1.type = 'square'; osc1.frequency.value = 800;
+                const osc2 = offlineCtx.createOscillator(); osc2.type = 'square'; osc2.frequency.value = 540;
+                const gain = offlineCtx.createGain();
+                gain.gain.setValueAtTime(0.5, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                const filter = offlineCtx.createBiquadFilter();
+                filter.type = 'bandpass'; filter.frequency.value = 800;
+                osc1.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(offlineCtx.destination);
+                osc1.start(t); osc1.stop(t + 0.2);
+                osc2.start(t); osc2.stop(t + 0.2);
+            } else if (type === 'tom_mid' || type === 'tom_low') {
+                const startFreq = type === 'tom_mid' ? 180 : 120;
+                const endFreq = type === 'tom_mid' ? 60 : 40;
+                const osc = offlineCtx.createOscillator();
+                const gain = offlineCtx.createGain();
+                osc.frequency.setValueAtTime(startFreq, t);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, t + 0.4);
+                gain.gain.setValueAtTime(0.8, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                osc.connect(gain); gain.connect(offlineCtx.destination);
+                osc.start(t); osc.stop(t + 0.4);
+            } else if (type === 'cymbal') {
+                const noise = createNoise(0.6);
+                const filter = offlineCtx.createBiquadFilter();
+                filter.type = 'highpass'; filter.frequency.value = 5000;
+                const gain = offlineCtx.createGain();
+                gain.gain.setValueAtTime(0.5, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+                noise.connect(filter); filter.connect(gain); gain.connect(offlineCtx.destination);
+                noise.start(t); noise.stop(t + 0.6);
+            }
+
+            return await offlineCtx.startRendering();
+        }
+
+        const dbPromise = new Promise((resolve, reject) => {
+            const req = indexedDB.open('ChopGridDB', 1);
+            req.onupgradeneeded = (e) => {
+                e.target.result.createObjectStore('project', { keyPath: 'id' });
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
 
         function initAudioEngine() {
             if (state.audioCtx) return;
@@ -1098,6 +1224,9 @@
                 pad.offset = 0;
                 pad.duration = 1;
                 pad.label = undefined;
+                pad.sourceType = null;
+                pad.fileData = null;
+                pad.synthName = null;
                 pad.colorClass = 'text-zinc-600 bg-zinc-800 border-zinc-700';
                 pad.colorHex = '#71717a';
                 
@@ -1108,8 +1237,9 @@
 
         els.btnSplit8.addEventListener('click', () => {
             if (state.selectedPadIndex === null) return;
-            const sourceBuffer = state.pads[state.selectedPadIndex].buffer;
-            const sourceName = state.pads[state.selectedPadIndex].label;
+            const sourcePad = state.pads[state.selectedPadIndex];
+            const sourceBuffer = sourcePad.buffer;
+            const sourceName = sourcePad.label;
             
             if (!sourceBuffer) {
                 alert("Selected pad has no audio loaded.");
@@ -1141,6 +1271,9 @@
                 const pad = state.pads[targetIndex];
                 killPadAudio(pad);
                 pad.buffer = sourceBuffer;
+                pad.sourceType = sourcePad.sourceType;
+                pad.fileData = sourcePad.fileData;
+                pad.synthName = sourcePad.synthName;
                 pad.offset = i * sliceLen;
                 pad.duration = sliceLen;
                 pad.colorClass = palette[targetIndex];
@@ -1178,8 +1311,14 @@
                     await new Promise(resolve => setTimeout(resolve, 10));
                     
                     const arrayBuffer = await filesToProcess[i].arrayBuffer();
+                    const bufferCopy = arrayBuffer.slice(0);
                     const audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
-                    const item = { buffer: audioBuffer, name: filesToProcess[i].name };
+                    const item = { 
+                        buffer: audioBuffer, 
+                        name: filesToProcess[i].name,
+                        fileData: bufferCopy,
+                        sourceType: 'file'
+                    };
                     state.audioPool.push(item);
                     newlyDecoded.push(item);
                 } catch (err) {
@@ -1206,6 +1345,9 @@
                     state.pads[i].colorClass = palette[i];
                     state.pads[i].colorHex = paletteHex[i];
                     state.pads[i].label = poolItem.name.substring(0, 12);
+                    state.pads[i].sourceType = poolItem.sourceType;
+                    state.pads[i].fileData = poolItem.fileData;
+                    state.pads[i].synthName = poolItem.synthName;
                 }
                 
                 renderPads();
@@ -1741,6 +1883,165 @@
             els.bpmVal.innerText = state.bpm;
             if (state.isPlaying && state.audioCtx) {
                 state.nextNoteTime = state.audioCtx.currentTime + 0.05;
+            }
+        });
+
+        els.btnLoad808.addEventListener('click', async () => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            
+            const drumMap = [
+                { type: 'kick', name: '808 Kick' },
+                { type: 'snare', name: '808 Snare' },
+                { type: 'hihat_c', name: '808 Hat (C)' },
+                { type: 'hihat_o', name: '808 Hat (O)' },
+                { type: 'clap', name: '808 Clap' },
+                { type: 'perc', name: '808 Perc' },
+                { type: 'tom_mid', name: '808 Tom' },
+                { type: 'cymbal', name: '808 Cymbal' }
+            ];
+            
+            els.statusDisplay.innerText = "SYNTHESIZING...";
+            els.statusDisplay.className = 'text-[9px] font-mono text-amber-500 mt-0.5 uppercase tracking-wider';
+            
+            for (let i = 0; i < 8; i++) {
+                const spec = drumMap[i];
+                state.pads[i].buffer = await createSynthDrum(spec.type, state.audioCtx);
+                state.pads[i].offset = 0;
+                state.pads[i].duration = state.pads[i].buffer.duration;
+                state.pads[i].colorClass = palette[i];
+                state.pads[i].colorHex = paletteHex[i];
+                state.pads[i].label = spec.name;
+                state.pads[i].sourceType = 'synth';
+                state.pads[i].synthName = spec.type;
+                state.pads[i].fileData = null;
+            }
+            
+            renderPads();
+            els.statusDisplay.innerText = "808 KIT LOADED";
+            els.statusDisplay.className = 'text-[9px] font-mono text-emerald-500 mt-0.5 uppercase tracking-wider';
+        });
+        
+        els.btnSaveProj.addEventListener('click', async () => {
+            try {
+                const db = await dbPromise;
+                const projectData = {
+                    id: 'default',
+                    bpm: state.bpm,
+                    swing: els.sliderSwing.value,
+                    scenes: state.scenes,
+                    currentSceneIndex: state.currentSceneIndex,
+                    fx: {
+                        hpf: els.sliderHpf.value,
+                        lpf: els.sliderLpf.value,
+                        delay: els.sliderDelay.value,
+                        reverb: els.sliderReverb.value,
+                        drive: els.sliderDrive.value,
+                        comp: els.sliderComp.value
+                    },
+                    pads: state.pads.map(p => ({
+                        sourceType: p.sourceType,
+                        synthName: p.synthName,
+                        fileData: p.fileData,
+                        label: p.label,
+                        offset: p.offset,
+                        duration: p.duration,
+                        pitch: p.pitch,
+                        oneShot: p.oneShot,
+                        colorClass: p.colorClass,
+                        colorHex: p.colorHex
+                    }))
+                };
+                
+                const tx = db.transaction('project', 'readwrite');
+                tx.objectStore('project').put(projectData);
+                await new Promise((resolve, reject) => {
+                    tx.oncomplete = resolve;
+                    tx.onerror = reject;
+                });
+                
+                els.statusDisplay.innerText = "PROJ SAVED";
+                els.statusDisplay.className = 'text-[9px] font-mono text-blue-400 mt-0.5 uppercase tracking-wider';
+            } catch (err) {
+                console.error(err);
+                alert("Error saving project.");
+            }
+        });
+        
+        els.btnLoadProj.addEventListener('click', async () => {
+            try {
+                initAudioEngine();
+                if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+                
+                const db = await dbPromise;
+                const tx = db.transaction('project', 'readonly');
+                const req = tx.objectStore('project').get('default');
+                
+                req.onsuccess = async () => {
+                    const data = req.result;
+                    if (!data) {
+                        alert("No saved project found.");
+                        return;
+                    }
+                    
+                    els.statusDisplay.innerText = "LOADING...";
+                    els.statusDisplay.className = 'text-[9px] font-mono text-amber-500 mt-0.5 uppercase tracking-wider';
+                    
+                    state.bpm = data.bpm || 120;
+                    els.sliderBpm.value = state.bpm;
+                    els.bpmVal.innerText = state.bpm;
+                    els.sliderSwing.value = data.swing || 0;
+                    
+                    state.scenes = data.scenes;
+                    state.currentSceneIndex = data.currentSceneIndex || 0;
+                    
+                    if (data.fx) {
+                        els.sliderHpf.value = data.fx.hpf; els.sliderHpf.dispatchEvent(new Event('input'));
+                        els.sliderLpf.value = data.fx.lpf; els.sliderLpf.dispatchEvent(new Event('input'));
+                        els.sliderDelay.value = data.fx.delay; els.sliderDelay.dispatchEvent(new Event('input'));
+                        els.sliderReverb.value = data.fx.reverb; els.sliderReverb.dispatchEvent(new Event('input'));
+                        els.sliderDrive.value = data.fx.drive; els.sliderDrive.dispatchEvent(new Event('input'));
+                        els.sliderComp.value = data.fx.comp; els.sliderComp.dispatchEvent(new Event('input'));
+                    }
+                    
+                    for (let i = 0; i < 8; i++) {
+                        const pd = data.pads[i];
+                        state.pads[i].offset = pd.offset || 0;
+                        state.pads[i].duration = pd.duration || 1;
+                        state.pads[i].pitch = pd.pitch || 0;
+                        state.pads[i].oneShot = !!pd.oneShot;
+                        state.pads[i].colorClass = pd.colorClass || palette[i];
+                        state.pads[i].colorHex = pd.colorHex || paletteHex[i];
+                        state.pads[i].label = pd.label || `PAD ${i+1}`;
+                        state.pads[i].sourceType = pd.sourceType;
+                        state.pads[i].synthName = pd.synthName;
+                        state.pads[i].fileData = pd.fileData;
+                        
+                        if (pd.sourceType === 'synth' && pd.synthName) {
+                            state.pads[i].buffer = await createSynthDrum(pd.synthName, state.audioCtx);
+                        } else if (pd.sourceType === 'file' && pd.fileData) {
+                            try {
+                                const bufferCopy = pd.fileData.slice(0);
+                                state.pads[i].buffer = await state.audioCtx.decodeAudioData(bufferCopy);
+                            } catch(e) {
+                                console.error('Failed to decode saved audio', e);
+                                state.pads[i].buffer = null;
+                            }
+                        } else {
+                            state.pads[i].buffer = null;
+                        }
+                    }
+                    
+                    renderPads();
+                    renderSequencer();
+                    updateSceneLabel();
+                    if (state.selectedPadIndex !== null) updateEditorUI();
+                    
+                    els.statusDisplay.innerText = "PROJ LOADED";
+                    els.statusDisplay.className = 'text-[9px] font-mono text-emerald-500 mt-0.5 uppercase tracking-wider';
+                };
+            } catch(e) {
+                console.error(e);
             }
         });
 
