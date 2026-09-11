@@ -469,6 +469,13 @@
                 <span class="text-[10px] font-bold font-mono text-zinc-400 uppercase w-16" id="splitValueLabel">Slices</span>
                 <input type="number" id="splitValue" min="1" max="12" step="1" value="4" class="w-full h-6 bg-zinc-700 border border-zinc-600 text-zinc-100 text-[10px] font-mono px-2 rounded focus:outline-none focus:border-zinc-500">
             </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold font-mono text-zinc-400 uppercase w-16">Play Mode</span>
+                <select id="splitPlayMode" class="bg-zinc-700 text-zinc-200 text-[10px] font-mono rounded px-2 py-1 flex-grow outline-none border border-zinc-600">
+                    <option value="oneshot">One-Shot (all slices)</option>
+                    <option value="gate">Gate (all slices)</option>
+                </select>
+            </div>
         </div>
         <div class="text-[9px] font-mono text-zinc-500 uppercase text-center" id="splitInfo">Will write to available empty pads.</div>
         <div class="flex justify-between gap-2 mt-1">
@@ -531,8 +538,7 @@
 
             audioPool: [], 
             
-            // FEATURE: reduced from 16 pads to 8 — this also now maps 1:1
-            // with the 8 sequencer tracks by default (track i -> pad i).
+            // This maps 1:1 with the 12 sequencer tracks by default (track i -> pad i).
             pads: new Array(12).fill(null).map(() => ({
                 buffer: null,
                 offset: 0,
@@ -878,6 +884,7 @@
             btnClearAll: document.getElementById('btnClearAll'),
             splitModal: document.getElementById('splitModal'),
             splitMode: document.getElementById('splitMode'),
+            splitPlayMode: document.getElementById('splitPlayMode'),
             splitValueLabel: document.getElementById('splitValueLabel'),
             splitValue: document.getElementById('splitValue'),
             splitInfo: document.getElementById('splitInfo'),
@@ -1358,13 +1365,13 @@
             state.delayNode.delayTime.value = 0.375;
             state.delayFeedback = state.audioCtx.createGain();
             state.delayFeedback.gain.value = 0.4;
-            const delayMix = state.audioCtx.createGain();
-            delayMix.gain.value = 0; 
+            state.delayMix = state.audioCtx.createGain();
+            state.delayMix.gain.value = 0; 
 
             state.reverbNode = state.audioCtx.createConvolver();
             state.reverbNode.buffer = createImpulseResponse(state.audioCtx, 1.5, 3.0);
-            const reverbMix = state.audioCtx.createGain();
-            reverbMix.gain.value = 0; 
+            state.reverbMix = state.audioCtx.createGain();
+            state.reverbMix.gain.value = 0; 
 
             // Chain: master -> drive -> hpf -> lpf -> comp -> output
             state.masterGain.connect(state.driveNode);
@@ -1378,65 +1385,22 @@
             
             state.delayNode.connect(state.delayFeedback);
             state.delayFeedback.connect(state.delayNode);
-            state.delayNode.connect(delayMix);
+            state.delayNode.connect(state.delayMix);
             
-            state.reverbNode.connect(reverbMix);
+            state.reverbNode.connect(state.reverbMix);
             
             for (let i=0; i<12; i++) {
                 state.trackDelaySends[i].connect(state.delayNode);
                 state.trackReverbSends[i].connect(state.reverbNode);
             }
 
-            delayMix.connect(state.outputNode);
-            reverbMix.connect(state.outputNode);
+            state.delayMix.connect(state.outputNode);
+            state.reverbMix.connect(state.outputNode);
 
             state.outputNode.connect(state.audioCtx.destination);
 
             state.recordDest = state.audioCtx.createMediaStreamDestination();
             state.outputNode.connect(state.recordDest);
-
-            els.sliderHpf.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                state.hpfNode.frequency.setTargetAtTime(val, state.audioCtx.currentTime, 0.05);
-                els.lblHpf.innerText = formatFreq(val);
-            });
-            els.sliderLpf.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                state.lpfNode.frequency.setTargetAtTime(val, state.audioCtx.currentTime, 0.05);
-                els.lblLpf.innerText = formatFreq(val);
-            });
-            els.sliderDelay.addEventListener('input', (e) => {
-                delayMix.gain.setTargetAtTime(parseFloat(e.target.value), state.audioCtx.currentTime, 0.05);
-            });
-            els.sliderReverb.addEventListener('input', (e) => {
-                reverbMix.gain.setTargetAtTime(parseFloat(e.target.value), state.audioCtx.currentTime, 0.05);
-            });
-            els.sliderDrive.addEventListener('input', (e) => {
-                const amt = parseFloat(e.target.value);
-                state.driveNode.curve = makeDistortionCurve(amt); // amt 0-1
-            });
-            els.sliderComp.addEventListener('input', (e) => {
-                const amt = parseFloat(e.target.value); // 0 to 1
-                state.compNode.threshold.setTargetAtTime(-40 * amt, state.audioCtx.currentTime, 0.05);
-                state.compNode.ratio.setTargetAtTime(1 + (19 * amt), state.audioCtx.currentTime, 0.05);
-                if (state.compMakeupNode) {
-                    // Add makeup gain so the compressor is louder when squashed.
-                    // If threshold is -40 and ratio is 20, max attenuation is significant.
-                    // We'll add up to 12dB of makeup gain when comp is maxed out.
-                    state.compMakeupNode.gain.setTargetAtTime(1 + (3 * amt), state.audioCtx.currentTime, 0.05);
-                }
-            });
-            
-            els.btnResetHpf.addEventListener('click', () => {
-                els.sliderHpf.value = 20;
-                state.hpfNode.frequency.setTargetAtTime(20, state.audioCtx.currentTime, 0.05);
-                els.lblHpf.innerText = formatFreq(20);
-            });
-            els.btnResetLpf.addEventListener('click', () => {
-                els.sliderLpf.value = 20000;
-                state.lpfNode.frequency.setTargetAtTime(20000, state.audioCtx.currentTime, 0.05);
-                els.lblLpf.innerText = formatFreq(20000);
-            });
         }
 
         function initUI() {
@@ -1907,7 +1871,7 @@
                     state.seqTracks[i].muted = false;
                     state.seqTracks[i].soloed = false;
                     state.seqTracks[i].steps = Array(32).fill(false);
-                    state.seqTracks[i].stepLocks = Array(32).fill(null);
+                    state.seqTracks[i].stepLocks = {};
                     state.seqTracks[i].trackLength = 32;
                 });
                 state.audioPool = [];
@@ -2081,7 +2045,7 @@
                 pad.synthName = sourcePad.synthName;
                 pad.offset = 0; // Offset is now 0 because the buffer is exactly the slice
                 pad.duration = slen;
-                pad.oneShot = true; // Slices default to one-shot
+                pad.oneShot = els.splitPlayMode ? (els.splitPlayMode.value !== 'gate') : true; // Applies chosen play mode to ALL generated slices
                 console.log("Split pad", targetIndex, "offset:", pad.offset, "duration:", pad.duration, "buffer.duration:", pad.buffer.duration);
                 pad.colorClass = palette[targetIndex];
                 pad.colorHex = paletteHex[targetIndex];
@@ -2367,7 +2331,10 @@
         });
 
         els.btnClearSeq.addEventListener('click', () => {
-            state.seqTracks.forEach(t => t.steps.fill(false));
+            state.seqTracks.forEach(t => {
+                t.steps.fill(false);
+                t.stepLocks = {};
+            });
             state.pads.forEach(pad => killPadAudio(pad));
             renderSequencer();
         });
@@ -2449,9 +2416,6 @@
             
             const { source, gain } = padData.manualNodes;
             const time = state.audioCtx.currentTime;
-            
-            // Note: decay might be stored as a string if we aren't careful, so cast to Number
-            const decay = Number(padData.decay !== undefined ? padData.decay : 10);
             
             // For release phase, we don't necessarily want a 10s release on key up.
             // But we'll just use a fast fade out to avoid clicks in gate mode.
@@ -2807,6 +2771,63 @@
             }
         });
 
+        // Global FX Listeners
+        els.sliderHpf.addEventListener('input', (e) => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            const val = parseFloat(e.target.value);
+            state.hpfNode.frequency.setTargetAtTime(val, state.audioCtx.currentTime, 0.05);
+            els.lblHpf.innerText = formatFreq(val);
+        });
+        els.sliderLpf.addEventListener('input', (e) => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            const val = parseFloat(e.target.value);
+            state.lpfNode.frequency.setTargetAtTime(val, state.audioCtx.currentTime, 0.05);
+            els.lblLpf.innerText = formatFreq(val);
+        });
+        els.sliderDelay.addEventListener('input', (e) => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            state.delayMix.gain.setTargetAtTime(parseFloat(e.target.value), state.audioCtx.currentTime, 0.05);
+        });
+        els.sliderReverb.addEventListener('input', (e) => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            state.reverbMix.gain.setTargetAtTime(parseFloat(e.target.value), state.audioCtx.currentTime, 0.05);
+        });
+        els.sliderDrive.addEventListener('input', (e) => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            const amt = parseFloat(e.target.value);
+            state.driveNode.curve = makeDistortionCurve(amt); // amt 0-1
+        });
+        els.sliderComp.addEventListener('input', (e) => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            const amt = parseFloat(e.target.value); // 0 to 1
+            state.compNode.threshold.setTargetAtTime(-40 * amt, state.audioCtx.currentTime, 0.05);
+            state.compNode.ratio.setTargetAtTime(1 + (19 * amt), state.audioCtx.currentTime, 0.05);
+            if (state.compMakeupNode) {
+                state.compMakeupNode.gain.setTargetAtTime(1 + (3 * amt), state.audioCtx.currentTime, 0.05);
+            }
+        });
+        
+        els.btnResetHpf.addEventListener('click', () => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            els.sliderHpf.value = 20;
+            state.hpfNode.frequency.setTargetAtTime(20, state.audioCtx.currentTime, 0.05);
+            els.lblHpf.innerText = formatFreq(20);
+        });
+        els.btnResetLpf.addEventListener('click', () => {
+            initAudioEngine();
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            els.sliderLpf.value = 20000;
+            state.lpfNode.frequency.setTargetAtTime(20000, state.audioCtx.currentTime, 0.05);
+            els.lblLpf.innerText = formatFreq(20000);
+        });
+
         els.btnLoadKit.addEventListener('click', async () => {
             initAudioEngine();
             if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
@@ -2952,6 +2973,8 @@
                     
                     for (let i = 0; i < 12; i++) {
                         const pd = data.pads[i];
+                        if (!pd) continue;
+                        
                         state.pads[i].offset = pd.offset || 0;
                         state.pads[i].duration = pd.duration || 1;
                         state.pads[i].pitch = pd.pitch || 0;
